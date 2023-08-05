@@ -131,7 +131,7 @@ publishing {
   repositories {
     maven {
       name = "GitHubPackages"
-      url = "https://maven.pkg.github.com/ndw/pkgtestignoreme"
+      url = "https://maven.pkg.github.com/saxonica/xmldoclet"
       credentials {
         username = project.findProperty("pubauthor") ?: "NOUSER"
         password = project.findProperty("pubtoken") ?: "NOPASS"
