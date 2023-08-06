@@ -13,6 +13,22 @@ public class XmlProcessor {
         this.builder = builder;
     }
 
+    protected String packageName(String className) {
+        int pos = className.lastIndexOf(".");
+        if (pos < 0) {
+            return "";
+        }
+        return className.substring(0, pos);
+    }
+
+    protected String className(String className) {
+        int pos = className.lastIndexOf(".");
+        if (pos < 0) {
+            return className;
+        }
+        return className.substring(pos+1);
+    }
+
     public void xml(Element elem) {
         System.err.printf("Unknown element: %s%n", elem);
     }
@@ -47,6 +63,10 @@ public class XmlProcessor {
                 break;
             case FIELD:
                 xelem = new XmlField(builder, docTrees);
+                xelem.xml(elem);
+                break;
+            case ANNOTATION_TYPE:
+                xelem = new XmlAnnotationType(builder, docTrees);
                 xelem.xml(elem);
                 break;
             default:

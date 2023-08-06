@@ -25,21 +25,15 @@ public class XmlEnum extends XmlProcessor {
         }
 
         builder.startElement("enum", attr);
-        builder.nl();
-        builder.docTree(enumElem, docTrees.getDocCommentTree(enumElem));
-        builder.nl();
+        builder.docTree(docTrees.getDocCommentTree(enumElem));
 
         for (Element child : enumElem.getEnclosedElements()) {
             if (child.getKind() == ElementKind.ENUM_CONSTANT) {
                 builder.startElement("value", "name", child.toString());
-                builder.endElement("value");
-                builder.nl();
+                builder.endElement();
             }
         }
 
-        builder.endElement("enum");
-        builder.nl();
-        builder.nl();
+        builder.endElement();
     }
-
 }

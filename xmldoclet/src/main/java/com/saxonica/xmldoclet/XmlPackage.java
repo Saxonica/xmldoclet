@@ -14,29 +14,30 @@ public class XmlPackage extends XmlProcessor {
 
     public void xml(Element elem) {
         PackageElement pkg = (PackageElement) elem;
-        builder.startElement("package", "name", pkg.toString(), "simpleName", pkg.getSimpleName().toString());
-        builder.nl();
 
-        builder.docTree(pkg, docTrees.getDocCommentTree(pkg));
-        builder.nl();
-        builder.nl();
+        //System.err.println("PACKAGE: " + pkg);
+
+        builder.startElement("package", "name", pkg.toString(), "simpleName", pkg.getSimpleName().toString());
+
+        builder.docTree(docTrees.getDocCommentTree(pkg));
 
         for (Element child : pkg.getEnclosedElements()) {
             switch (child.getKind()) {
                 case CLASS:
                     builder.startElement("classref", "name", child.toString(), "simpleName", child.getSimpleName().toString());
-                    builder.endElement("classref");
-                    builder.nl();
+                    builder.endElement();
                     break;
                 case INTERFACE:
                     builder.startElement("interfaceref", "name", child.toString(), "simpleName", child.getSimpleName().toString());
-                    builder.endElement("interfaceref");
-                    builder.nl();
+                    builder.endElement();
                     break;
                 case ENUM:
                     builder.startElement("enumref", "name", child.toString(), "simpleName", child.getSimpleName().toString());
-                    builder.endElement("enumref");
-                    builder.nl();
+                    builder.endElement();
+                    break;
+                case ANNOTATION_TYPE:
+                    builder.startElement("annotationtyperef", "name", child.toString(), "simpleName", child.getSimpleName().toString());
+                    builder.endElement();
                     break;
                 default:
                     System.err.println("Unexpected element in package: " + child);
@@ -44,7 +45,6 @@ public class XmlPackage extends XmlProcessor {
             }
         }
 
-        builder.endElement("package");
-        builder.nl();
+        builder.endElement();
     }
 }

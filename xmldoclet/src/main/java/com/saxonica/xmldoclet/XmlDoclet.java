@@ -22,6 +22,7 @@ public class XmlDoclet implements Doclet {
     /** The root directory where Javadoc is output. */
     private String destinationDir;
     /** Passed by Gradle; ignored. */
+    private String outputFile = "doclet.xml";
     private String doctitle;
     /** Passed by Gradle; ignored. */
     private String windowtitle;
@@ -85,7 +86,7 @@ public class XmlDoclet implements Doclet {
     @Override
     public boolean run(DocletEnvironment environment) {
         DocTrees treeUtils = environment.getDocTrees();
-        XmlScanner show = new XmlScanner(treeUtils, destinationDir);
+        XmlScanner show = new XmlScanner(treeUtils, destinationDir, outputFile);
         show.show(environment.getIncludedElements());
         return OK;
     }

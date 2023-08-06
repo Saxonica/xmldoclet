@@ -2,7 +2,11 @@ plugins {
   id 'java-library'
   id 'maven-publish'
   id 'signing'
+  id 'com.github.gmazzo.buildconfig' version "4.1.2"
 }
+
+import java.text.DateFormat
+import java.text.SimpleDateFormat
 
 repositories {
   mavenLocal()
@@ -18,10 +22,9 @@ dependencies {
 
   testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 
-  // This dependency is exported to consumers, that is to say found on their compile classpath.
-  // api 'org.apache.commons:commons-math3:3.6.1'
+  api 'nu.validator.htmlparser:htmlparser:1.4'
+  api 'net.sf.saxon:Saxon-HE:12.3'
 
-  // This dependency is used internally, and not exposed to consumers on their own compile classpath.
   implementation 'net.sf.saxon:Saxon-HE:12.3'
 }
 
@@ -36,12 +39,42 @@ tasks.named('test') {
   useJUnitPlatform()
 }
 
+// ============================================================
+
+public String dateTime() {
+  TimeZone tz = TimeZone.getTimeZone("UTC");
+  DateFormat df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'");
+  df.setTimeZone(tz);
+  return df.format(new Date());
+}
+
+public String gitHash() {
+  def hashout = new ByteArrayOutputStream()
+  exec {
+    commandLine "git", "log", "-1", "--format=%h"
+    standardOutput = hashout
+  }
+  return hashout.toString().trim()
+}
+
+buildConfig {
+  packageName('com.saxonica.xmldoclet')
+  buildConfigField('String', 'TITLE', "\"${docletTitle}\"")
+  buildConfigField('String', 'VERSION', "\"${docletVersion}\"")
+  buildConfigField('String', 'SCHEMA_VERSION', "\"${schemaVersion}\"")
+  buildConfigField('String', 'PUB_DATE', "\"${dateTime()}\"")
+  buildConfigField('String', 'PUB_HASH', "\"${gitHash()}\"")
+}
+
+// ============================================================
+
 tasks.register('xmljavadoc', Javadoc) {
+  group = "documentation"
   classpath = configurations.xmlDoclet
   source = sourceSets.main.allJava
   destinationDir = file("${buildDir}/xmldoc")
   options.doclet = 'com.saxonica.xmldoclet.XmlDoclet'
-  options.docletpath = [file("${buildDir}/classes/java/main")]
+  options.docletpath = configurations.xmlDoclet.files.asType(List) + file("${buildDir}/classes/java/main")
 }
 
 // ============================================================
@@ -129,12 +162,19 @@ publishing {
   }
 
   repositories {
-    maven {
-      name = "GitHubPackages"
-      url = "https://maven.pkg.github.com/saxonica/xmldoclet"
-      credentials {
-        username = project.findProperty("pubauthor") ?: "NOUSER"
-        password = project.findProperty("pubtoken") ?: "NOPASS"
+    if (project.findProperty("mavenLocalPublish") != null) {
+      println("Publish to ${project.findProperty("mavenLocalPublish")}")
+      maven {
+        url = project.findProperty("mavenLocalPublish")
+      }
+    } else {
+      maven {
+        name = "GitHubPackages"
+        url = "https://maven.pkg.github.com/saxonica/xmldoclet"
+        credentials {
+          username = project.findProperty("pubauthor") ?: "NOUSER"
+          password = project.findProperty("pubtoken") ?: "NOPASS"
+        }
       }
     }
   }

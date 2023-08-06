@@ -38,4 +38,8 @@ public class XmlField extends XmlVariable {
         return 7;
     }
 
+    private class Spooner<T> {
+
+    }
+
 }

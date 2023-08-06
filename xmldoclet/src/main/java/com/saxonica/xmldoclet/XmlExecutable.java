@@ -45,9 +45,8 @@ public class XmlExecutable extends XmlProcessor {
         DocCommentTree comments = docTrees.getDocCommentTree(xelem);
 
         builder.startElement(name, attr);
-        builder.nl();
 
-        builder.docTree(xelem, comments);
+        builder.docTree(comments);
 
         xmlForChildren(xelem);
 
@@ -72,30 +71,28 @@ public class XmlExecutable extends XmlProcessor {
         for (VariableElement param : xelem.getParameters()) {
             attr.clear();
             attr.put("name", param.getSimpleName().toString());
-            attr.put("type", param.asType().toString());
+            attr.put("fulltype", param.asType().toString());
+            attr.put("type", className(param.asType().toString()));
             builder.startElement("param", attr);
-            builder.docTree(param, docTrees.getDocCommentTree(param));
+            builder.docTree(docTrees.getDocCommentTree(param));
             ParamTree ptree = params.getOrDefault(param.getSimpleName().toString(), null);
             if (ptree != null) {
                 builder.processList(ptree.getDescription());
             }
-            builder.endElement("param");
-            builder.nl();
+            builder.endElement();
         }
 
         if (!"constructor".equals(name) && xelem.getReturnType() != null) {
             attr.clear();
-            attr.put("type", xelem.getReturnType().toString());
+            attr.put("fulltype", xelem.getReturnType().toString());
+            attr.put("type", className(xelem.getReturnType().toString()));
             builder.startElement("return", attr);
             if (returns != null) {
                 builder.processList(returns.getDescription());
             }
-            builder.endElement("return");
-            builder.nl();
+            builder.endElement();
         }
 
-        builder.endElement(name);
-        builder.nl();
-        builder.nl();
+        builder.endElement();
     }
 }

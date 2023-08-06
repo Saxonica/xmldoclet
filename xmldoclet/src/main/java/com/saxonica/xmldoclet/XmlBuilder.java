@@ -1,57 +1,125 @@
 package com.saxonica.xmldoclet;
 
 import com.sun.source.doctree.*;
+import net.sf.saxon.Controller;
+import net.sf.saxon.event.ComplexContentOutputter;
+import net.sf.saxon.event.NamespaceReducer;
+import net.sf.saxon.event.PipelineConfiguration;
+import net.sf.saxon.event.Receiver;
+import net.sf.saxon.om.*;
+import net.sf.saxon.s9api.*;
+import net.sf.saxon.serialize.SerializationProperties;
+import net.sf.saxon.str.StringView;
+import net.sf.saxon.trans.XPathException;
+import net.sf.saxon.type.BuiltInAtomicType;
+import net.sf.saxon.type.Untyped;
+import nu.validator.htmlparser.common.XmlViolationPolicy;
+import nu.validator.htmlparser.dom.HtmlDocumentBuilder;
+import org.w3c.dom.Document;
+import org.xml.sax.InputSource;
+import org.xml.sax.SAXException;
 
-import javax.lang.model.element.Element;
 import javax.lang.model.element.Name;
-import javax.lang.model.element.VariableElement;
-import java.io.ByteArrayOutputStream;
-import java.io.PrintStream;
+import javax.xml.transform.dom.DOMSource;
+import javax.xml.transform.sax.SAXSource;
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 
 /** Helper class to construct well-formed XML.
- * <p>Obviously, this should just be done with a Saxon Processor and a DocumentBuilder. Unfortunately,
- * I couldn't figure out how to get the new jdk.doclet builder to use jars passed on the -classpath
- * and I got impatient.</p>
  */
 public class XmlBuilder {
-    private final int DOCUMENT = 0;
-    private final int ELEMENT = 1;
-    private final int CONTENT = 2;
+    private final Processor processor;
+    private Receiver receiver = null;
+    private XdmDestination destination = null;
+    private Stack<String> elementStack = null;
 
-    private ByteArrayOutputStream stream = null;
-    private PrintStream out = null;
-    private String xml;
-    private final Stack<String> elemStack = new Stack<>();
-    private int state = DOCUMENT;
+    public XmlBuilder() {
+        this(new Processor());
+    }
+
+    public XmlBuilder(Processor processor) {
+        this.processor = processor;
+        elementStack = new Stack<>();
+    }
 
     public String getXml() {
-        return xml;
+        //System.err.println("GX: " + receiver);
+        return destination.getXdmNode().toString();
     }
 
     public void startDocument() {
-        stream = new ByteArrayOutputStream();
-        out = new PrintStream(stream);
+        Controller controller = new Controller(processor.getUnderlyingConfiguration());
+        destination = new XdmDestination();
+
+        PipelineConfiguration pipe = controller.makePipelineConfiguration();
+        SerializationProperties serprop = new SerializationProperties();
+        receiver = destination.getReceiver(pipe, serprop);
+        receiver.setPipelineConfiguration(pipe);
+
+        receiver.setSystemId("https://example.com/");
+        receiver = new ComplexContentOutputter(new NamespaceReducer(receiver));
+        //System.err.println("SD: " + receiver);
+        try {
+            receiver.open();
+            receiver.startDocument(0);
+        } catch (XPathException ex) {
+            throw new RuntimeException(ex);
+        }
     }
 
     public void endDocument() {
-        while (!elemStack.isEmpty()) {
-            endElement(elemStack.peek());
+        //System.err.println("ED: " + receiver);
+        try {
+            while (!elementStack.isEmpty()) {
+                elementStack.pop();
+                receiver.endElement();
+            }
+            receiver.endDocument();
+            receiver.close();
+        } catch (XPathException ex) {
+            throw new RuntimeException(ex);
         }
+    }
 
-        xml = stream.toString(StandardCharsets.UTF_8);
-        out = null;
-        stream = null;
-        state = DOCUMENT;
+    public void addSubtree(XdmNode node) {
+        if (node.getNodeKind() == XdmNodeKind.DOCUMENT) {
+            addChildren(node);
+        } else if (node.getNodeKind() == XdmNodeKind.ELEMENT) {
+            startElement(node);
+            addChildren(node);
+            endElement();
+        } else if (node.getNodeKind() == XdmNodeKind.COMMENT) {
+            comment(node.getStringValue());
+        } else if (node.getNodeKind() == XdmNodeKind.TEXT) {
+            text(node.getStringValue());
+        } else if (node.getNodeKind() == XdmNodeKind.PROCESSING_INSTRUCTION) {
+            processingInstruction(node.getNodeName().getLocalName(), node.getStringValue());
+        } else {
+            throw new UnsupportedOperationException("Unexpected node type");
+        }
+    }
+
+    public void addChildren(XdmNode node) {
+        XdmSequenceIterator<XdmNode> iter = node.axisIterator(Axis.CHILD);
+        while (iter.hasNext()) {
+            XdmNode child = iter.next();
+            addSubtree(child);
+        }
+    }
+
+    private void startElement(XdmNode node) {
+        AttributeMap attrs = node.getUnderlyingNode().attributes();
+        startElement(node.getNodeName().getLocalName(), attrs);
+
+    }
+    private void startElement(Name name) {
+        startElement(name.toString());
     }
 
     public void startElement(String name) {
         startElement(name, Collections.emptyMap());
-    }
-
-    private void startElement(Name name) {
-        startElement(name.toString(), Collections.emptyMap());
     }
 
     public void startElement(String name, String... pairs) {
@@ -68,88 +136,130 @@ public class XmlBuilder {
     }
 
     public void startElement(String name, Map<String,String> attributes) {
-        if (state == ELEMENT) {
-            out.print(">");
-        }
-
-        //System.err.printf("PUSH %s%n", name);
-        elemStack.push(name);
-        out.printf("<%s", name);
-
+        AttributeMap amap = EmptyAttributeMap.getInstance();
         if (attributes != null && !attributes.isEmpty()) {
-            String[] names = new String[attributes.size()];
-            int pos = 0;
             for (String aname : attributes.keySet()) {
-                names[pos] = aname;
-                pos++;
-            }
-            Arrays.sort(names);
-            for (String aname : names) {
-                String value = escape(attributes.get(aname)).replace("\"", "&quot;");
-                out.printf(" %s=\"%s\"", aname, value);
+                FingerprintedQName qname = new FingerprintedQName("", NamespaceUri.of(""), aname);
+                AttributeInfo ainfo = new AttributeInfo(qname, BuiltInAtomicType.UNTYPED_ATOMIC, attributes.get(aname), VoidLocation.getInstance(), 0);
+                amap = amap.put(ainfo);
             }
         }
-
-        state = ELEMENT;
+        startElement(name, amap);
     }
 
-    private void endElement(Name name) {
-        endElement(name.toString());
+    private void startElement(String name, AttributeMap attributes) {
+        try {
+            FingerprintedQName qname = new FingerprintedQName("", NamespaceUri.of(""), name);
+            receiver.startElement(qname, Untyped.INSTANCE, attributes, NamespaceMap.emptyMap(), VoidLocation.getInstance(), 0);
+            elementStack.push(name);
+        } catch (XPathException ex) {
+            throw new RuntimeException(ex);
+        }
     }
 
-    public void endElement(String name) {
-        //System.err.printf("POP %s%n", name);
-        if (!name.equals(elemStack.peek())) {
-            System.err.printf("BAD XML: %s ends %s%n", name, elemStack.peek());
+    public void endElement(DocTree tree) {
+        if (elementStack.isEmpty()) {
+            //System.err.println("Ignoring close tag: " + tree);
+            return;
         }
-        if (state == ELEMENT) {
-            out.print("/>");
-        } else {
-            out.printf("</%s>", name);
+        endElement();
+    }
+
+    public void endElement() {
+        if (elementStack.isEmpty()) {
+            //System.err.println("Ignoring close tag");
+            return;
         }
-        elemStack.pop();
-        state = CONTENT;
+        try {
+            receiver.endElement();
+            elementStack.pop();
+        } catch (XPathException ex) {
+            throw new RuntimeException(ex);
+        }
     }
 
     public void comment(String text) {
-        if (state == ELEMENT) {
-            out.print(">");
+        try {
+            receiver.comment(StringView.of(text), VoidLocation.getInstance(), 0);
+        } catch (XPathException ex) {
+            throw new RuntimeException(ex);
         }
-        out.printf("<!--%s-->", escape(text));
-        state = CONTENT;
     }
 
     public void processingInstruction(String target, String data) {
-        if (state == ELEMENT) {
-            out.print(">");
+        try {
+            receiver.processingInstruction(target, StringView.of(data), VoidLocation.getInstance(), 0);
+        } catch (XPathException ex) {
+            throw new RuntimeException(ex);
         }
-        out.printf("<?%s", target);
-        if (data != null && !data.isEmpty()) {
-            out.printf(" %s", escape(data));
-        }
-        out.print("?>");
-        state = CONTENT;
     }
 
     public void text(String text) {
-        if (state == ELEMENT) {
-            out.print(">");
+        try {
+            receiver.characters(StringView.of(text), VoidLocation.getInstance(), 0);
+        } catch (XPathException ex) {
+            throw new RuntimeException(ex);
         }
-        out.print(escape(text));
-        state = CONTENT;
-    }
-
-    public void nl() {
-        text("\n");
-    }
-
-    private String escape(String str) {
-        return str.replace("&", "&amp;").replace("<", "&lt;");
     }
 
     // ==================================================================================
 
-    public void docTree(Element elem, DocCommentTree dcTree) {
+    private void prose(String wrapper, List<? extends DocTree> elements) {
+        //System.err.println("PROSE:");
+        XmlBuilder miniBuilder = new XmlBuilder();
+        miniBuilder.startDocument();
+        miniBuilder.startElement("body");
+        for (DocTree tree : elements) {
+            miniBuilder.processTree(tree);
+            //System.err.println(tree);
+        }
+        miniBuilder.endElement();
+        miniBuilder.endDocument();
+        String miniXml = miniBuilder.getXml();
+        //System.err.println("PROSE: " + miniXml);
+
+        try {
+            ByteArrayInputStream bais = new ByteArrayInputStream(miniXml.getBytes(StandardCharsets.UTF_8));
+            HtmlDocumentBuilder htmlBuilder = new HtmlDocumentBuilder(XmlViolationPolicy.ALTER_INFOSET);
+            Document html = htmlBuilder.parse(bais);
+            Processor processor = new Processor(false);
+            DocumentBuilder xbuilder = processor.newDocumentBuilder();
+            XdmNode doc = xbuilder.build(new DOMSource(html));
+
+            String xml = doc.toString();
+            if (xml.contains("<body/>")) {
+                // nevermind
+                return;
+            }
+
+            // Reparse to strip out the namespace. Hack.
+            int pos = xml.indexOf("<body>");
+            xml = xml.substring(pos);
+            pos = xml.lastIndexOf(("</body>"));
+            xml = xml.substring(0, pos+7);
+
+            xbuilder = processor.newDocumentBuilder();
+            bais = new ByteArrayInputStream(xml.getBytes(StandardCharsets.UTF_8));
+            SAXSource source = new SAXSource(new InputSource(bais));
+            XdmNode node = xbuilder.build(source);
+
+            XPathCompiler compiler = processor.newXPathCompiler();
+            XPathExecutable exec = compiler.compile("/body");
+            XPathSelector selector = exec.load();
+            selector.setContextItem(node);
+            XdmValue selection = selector.evaluate();
+
+            startElement(wrapper);
+            addChildren((XdmNode) selection);
+            endElement();
+        } catch (SAXException | SaxonApiException | IOException ex) {
+            throw new RuntimeException(ex);
+        }
+    }
+
+    // ==================================================================================
+
+    public void docTree(DocCommentTree dcTree) {
         if (dcTree == null) {
             //System.err.printf("No comments for: %s%n", elem);
             return;
@@ -157,19 +267,20 @@ public class XmlBuilder {
 
         processList(dcTree.getBlockTags());
 
-        startElement("purpose");
-        processList(dcTree.getFirstSentence());
-        endElement("purpose");
-        nl();
-
-        if (!dcTree.getBody().isEmpty()) {
-            startElement("description");
-            nl();
-            processList(dcTree.getBody());
-            nl();
-            endElement("description");
-            nl();
+        /*
+        System.err.println("====================================");
+        for (DocTree t : dcTree.getFirstSentence()) {
+            System.err.println(t);
         }
+        System.err.println("------------------------------------");
+        for (DocTree t : dcTree.getBody()) {
+            System.err.println(t);
+        }
+        System.err.println("====================================");
+         */
+
+        prose("purpose",dcTree.getFirstSentence());
+        prose("description", dcTree.getBody());
     }
 
     public void processList(List<? extends DocTree> elements) {
@@ -182,6 +293,8 @@ public class XmlBuilder {
         if (tree == null) {
             return;
         }
+
+        //System.err.println("TREE: " + tree);
 
         Map<String,String> attr = new HashMap<>();
         switch (tree.getKind()) {
@@ -197,52 +310,45 @@ public class XmlBuilder {
                 startElement(selem.getName().toString(), attr);
                 break;
             case END_ELEMENT:
-                endElement(((EndElementTree) tree).getName());
+                endElement(tree);
                 break;
             case LINK:
             case LINK_PLAIN:
                 LinkTree lkTree = (LinkTree) tree;
                 startElement(lkTree.getTagName(), "ref", ((LinkTree) tree).getReference().getSignature());
-                endElement(lkTree.getTagName());
+                endElement();
                 break;
             case SINCE:
                 SinceTree sTree = (SinceTree) tree;
                 startElement(sTree.getTagName());
                 processList(sTree.getBody());
-                endElement(sTree.getTagName());
-                nl();
+                endElement();
                 break;
             case VERSION:
                 VersionTree vTree = (VersionTree) tree;
                 startElement(vTree.getTagName());
                 processList(vTree.getBody());
-                endElement(vTree.getTagName());
-                nl();
+                endElement();
                 break;
             case VALUE:
                 ValueTree valTree = (ValueTree) tree;
                 startElement(valTree.getTagName());
-                endElement(valTree.getTagName());
-                nl();
+                endElement();
                 break;
             case SUMMARY:
                 SummaryTree sumTree = (SummaryTree) tree;
                 startElement(sumTree.getTagName());
                 processList(sumTree.getSummary());
-                endElement(sumTree.getTagName());
-                nl();
+                endElement();
                 break;
             case AUTHOR:
-                nl();
                 startElement("author");
-                nl();
                 for (DocTree name : ((AuthorTree) tree).getName()) {
                     startElement("name");
                     processTree(name);
-                    endElement("name");
-                    nl();
+                    endElement();
                 }
-                endElement("author");
+                endElement();
                 break;
             case PARAM:
                 // Handled in enclosing class
@@ -255,13 +361,19 @@ public class XmlBuilder {
                 LiteralTree ltree = (LiteralTree) tree;
                 startElement("code");
                 text(ltree.getBody().toString());
-                endElement("code");
+                endElement();
                 break;
             case SEE:
                 SeeTree seeTree = (SeeTree) tree;
                 startElement(seeTree.getTagName());
                 processList(seeTree.getReference());
-                endElement(seeTree.getTagName());
+                endElement();
+                break;
+            case REFERENCE:
+                ReferenceTree refTree = (ReferenceTree) tree;
+                startElement("ref");
+                text(refTree.getSignature().toString());
+                endElement();
                 break;
             case COMMENT:
                 CommentTree ctree = (CommentTree) tree;
@@ -272,44 +384,48 @@ public class XmlBuilder {
             case ENTITY:
                 EntityTree etree = (EntityTree) tree;
                 startElement("ent", "name", etree.getName().toString());
-                endElement("ent");
+                endElement();
                 break;
             case DEPRECATED:
                 DeprecatedTree dtree = (DeprecatedTree) tree;
                 startElement("deprecated");
                 processList(dtree.getBody());
-                endElement("deprecated");
-                nl();
+                endElement();
                 break;
             case HIDDEN:
                 HiddenTree htree = (HiddenTree) tree;
                 startElement("hidden");
                 processList(htree.getBody());
-                endElement("hidden");
-                nl();
+                endElement();
                 break;
             case THROWS:
             case EXCEPTION:
                 ThrowsTree ttree = (ThrowsTree) tree;
                 startElement("throws", "exception", ttree.getExceptionName().toString());
                 processList(ttree.getDescription());
-                endElement("throws");
-                nl();
+                endElement();
                 break;
             case UNKNOWN_BLOCK_TAG:
                 UnknownBlockTagTree ubttree = (UnknownBlockTagTree) tree;
                 startElement("unknown", "tagname", ubttree.getTagName());
                 processList(ubttree.getContent());
-                endElement("unknown");
-                nl();
+                endElement();
+                break;
+            case ERRONEOUS:
+                ErroneousTree errTree = (ErroneousTree) tree;
+                startElement("error");
+                text(errTree.toString());
+                System.err.println(errTree.getDiagnostic().toString());
+                endElement();
                 break;
             default:
                 System.err.printf("Unexpected tree kind: %s%n", tree.getKind().toString());
                 startElement("unexpected", "type", tree.getKind().toString());
                 text(tree.toString());
-                endElement("unexpected");
-                nl();
+                endElement();
                 break;
         }
     }
+
+
 }

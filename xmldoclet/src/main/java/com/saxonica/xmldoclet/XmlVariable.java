@@ -22,22 +22,27 @@ public class XmlVariable extends XmlProcessor {
 
         Map<String,String> attr = new HashMap<>();
         attr.put("name", xelem.getSimpleName().toString());
-        attr.put("type", xelem.asType().toString());
+        attr.put("fulltype", xelem.asType().toString());
+        attr.put("type", className(xelem.asType().toString()));
         if (xelem.getConstantValue() != null) {
-            attr.put("value", xelem.getConstantValue().toString());
+            if (xelem.getConstantValue() instanceof Character) {
+                Character ch = (Character) xelem.getConstantValue();
+                if (Character.isSurrogate(ch)) {
+                    attr.put("value", String.format("(char) 0x%04x", (int) ch));
+                } else {
+                    attr.put("value", xelem.getConstantValue().toString());
+                }
+            }
         }
         for (Modifier modifier : xelem.getModifiers()) {
             attr.put(modifier.toString(), "true");
         }
 
         builder.startElement(name, attr);
-        builder.nl();
-        builder.docTree(xelem, docTrees.getDocCommentTree(xelem));
+        builder.docTree(docTrees.getDocCommentTree(xelem));
 
         xmlForChildren(xelem);
 
-        builder.endElement(name);
-        builder.nl();
-        builder.nl();
+        builder.endElement();
     }
 }
