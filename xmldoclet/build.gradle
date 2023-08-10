@@ -35,6 +35,14 @@ java {
   }
 }
 
+compileJava {
+  options.compilerArgs.add('--add-exports=jdk.compiler/com.sun.tools.javac.code=ALL-UNNAMED')
+}
+
+compileTestJava {
+  options.compilerArgs.add('--add-exports=jdk.compiler/com.sun.tools.javac.code=ALL-UNNAMED')
+}
+
 tasks.named('test') {
   useJUnitPlatform()
 }
@@ -75,6 +83,9 @@ tasks.register('xmljavadoc', Javadoc) {
   destinationDir = file("${buildDir}/xmldoc")
   options.doclet = 'com.saxonica.xmldoclet.XmlDoclet'
   options.docletpath = configurations.xmlDoclet.files.asType(List) + file("${buildDir}/classes/java/main")
+  addMultilineStringsOption("--add-exports").setValue([
+    'jdk.compiler/com.sun.tools.javac.code=ALL-UNNAMED'
+  ])
 }
 
 // ============================================================

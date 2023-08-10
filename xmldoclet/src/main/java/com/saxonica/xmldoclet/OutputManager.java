@@ -11,10 +11,6 @@ public class OutputManager {
     private final String outputFilename;
     private PrintStream outputStream = null;
 
-    public OutputManager(String destinationDir) {
-        this(destinationDir, null);
-    }
-
     public OutputManager(String destinationDir, String outputFilename) {
         this.destinationDir = destinationDir;
         this.outputFilename = outputFilename;
@@ -43,31 +39,9 @@ public class OutputManager {
         }
     }
 
-    public void output(Element elem, String xml) {
+    public void output(String xml) {
         if (outputStream != null) {
             outputStream.println(xml);
-            return;
-        }
-
-        final String filename;
-        switch (elem.getKind()) {
-            case PACKAGE:
-                //System.err.printf("Scanning package: %s%n", elem);
-                filename = destinationDir + "/" + elem.toString().replace(".", "/") + "/package.xml";
-                break;
-            case CLASS:
-            case INTERFACE:
-            case ENUM:
-                //System.err.printf("Scanning class: %s%n", elem);
-                filename = destinationDir + "/" + elem.toString().replace(".", "/") + ".xml";
-                break;
-            default:
-                System.err.println("Unexpected element to scan: " + elem);
-                filename = null;
-                break;
-        }
-
-        if (filename == null) {
             return;
         }
 

@@ -5,7 +5,6 @@ import java.util.Locale;
 import java.util.Set;
 import javax.lang.model.SourceVersion;
 
-import com.sun.source.util.DocTrees;
 import jdk.javadoc.doclet.Doclet;
 import jdk.javadoc.doclet.DocletEnvironment;
 import jdk.javadoc.doclet.Reporter;
@@ -68,6 +67,10 @@ public class XmlDoclet implements Doclet {
     public void init(Locale locale, Reporter reporter) {
     }
 
+    /**
+     * Get the doclet name.
+     * @return the doclet name.
+     */
     @Override
     public String getName() {
         return getClass().getSimpleName();
@@ -85,9 +88,8 @@ public class XmlDoclet implements Doclet {
 
     @Override
     public boolean run(DocletEnvironment environment) {
-        DocTrees treeUtils = environment.getDocTrees();
-        XmlScanner show = new XmlScanner(treeUtils, destinationDir, outputFile);
-        show.show(environment.getIncludedElements());
+        XmlProcessor scanner = new XmlProcessor(environment, destinationDir, outputFile);
+        scanner.scan();
         return OK;
     }
 }
