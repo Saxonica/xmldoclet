@@ -55,20 +55,14 @@ jobs:
       - name: Build and test
         run: |
           ./gradlew dist
+          ./gradlew :sample:xmljavadoc
 
-# These don’t work yet
-#
-#      - name: Publish xmldoclet release
-#        uses: softprops/action-gh-release@v1
-#        if: ${{ env.CI_BRANCH == 'main' && env.CI_TAG != '' }}
-#        with:
-#          token: ${{ secrets.ACCESS_TOKEN }}
-#          draft: false
-#          fail_on_unmatched_files: true
-#          files: |
-#            xmldoclet/build/distributions/xmldoclet-${{ env.CI_TAG }}.zip
-#
-#      - name: Publish xmldoclet package
-#        if: ${{ env.CI_BRANCH == 'main' && env.CI_TAG != '' }}
-#        run: |
-#          ./gradlew -Ppubauthor=${{ secrets.PACKAGE_AUTHOR }} -Ppubtoken=${{ secrets.ACCESS_TOKEN }} publish
+      - name: Publish xmldoclet release
+        uses: softprops/action-gh-release@v1
+        if: ${{ env.CI_BRANCH == 'main' && env.CI_TAG != '' }}
+        with:
+          token: ${{ secrets.ACCESS_TOKEN }}
+          draft: false
+          fail_on_unmatched_files: true
+          files: |
+            xmldoclet/build/distributions/xmldoclet-${{ env.CI_TAG }}.zip
