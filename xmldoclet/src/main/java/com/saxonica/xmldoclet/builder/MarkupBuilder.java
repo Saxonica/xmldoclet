@@ -1,7 +1,5 @@
 package com.saxonica.xmldoclet.builder;
 
-import com.saxonica.xmldoclet.ResolvedReference;
-import com.saxonica.xmldoclet.XmlProcessor;
 import com.sun.source.doctree.*;
 
 import javax.lang.model.element.Name;
@@ -20,163 +18,18 @@ public abstract class MarkupBuilder {
         }
     }
 
-    public void processTree(DocTree tree) {
-        if (tree == null) {
-            return;
-        }
+    public abstract void processTree(DocTree tree);
 
-        Map<String,String> attr = new HashMap<>();
-        switch (tree.getKind()) {
-            case TEXT:
-                text(tree.toString());
-                break;
-            case START_ELEMENT:
-                StartElementTree selem = (StartElementTree) tree;
-                for (DocTree dtree : selem.getAttributes()) {
-                    AttributeTree atree = (AttributeTree) dtree;
-                    attr.put(atree.getName().toString(), atree.getValue().toString());
-                }
-                startElement(selem.getName(), attr);
-                break;
-            case END_ELEMENT:
-                endElement(((EndElementTree) tree).getName());
-                break;
-            case LINK:
-            case LINK_PLAIN:
-                String elementName = (tree.getKind() == DocTree.Kind.LINK) ? "a" : "span";
-                handleRef(elementName, ((LinkTree) tree).getReference(), ((LinkTree) tree).getLabel());
-                break;
-            case REFERENCE:
-                ReferenceTree refTree = (ReferenceTree) tree;
-                handleRef("span", refTree, Collections.emptyList());
-                break;
-            case SINCE:
-                SinceTree sTree = (SinceTree) tree;
-                startElement(sTree.getTagName());
-                processList(sTree.getBody());
-                endElement(sTree.getTagName());
-                break;
-            case VERSION:
-                VersionTree vTree = (VersionTree) tree;
-                startElement(vTree.getTagName());
-                processList(vTree.getBody());
-                endElement(vTree.getTagName());
-                break;
-            case VALUE:
-                ValueTree valTree = (ValueTree) tree;
-                startElement(valTree.getTagName());
-                endElement(valTree.getTagName());
-                break;
-            case SUMMARY:
-                SummaryTree sumTree = (SummaryTree) tree;
-                startElement(sumTree.getTagName());
-                processList(sumTree.getSummary());
-                endElement(sumTree.getTagName());
-                break;
-            case AUTHOR:
-                startElement("author");
-                for (DocTree name : ((AuthorTree) tree).getName()) {
-                    startElement("name");
-                    processTree(name);
-                    endElement("name");
-                }
-                endElement("author");
-                break;
-            case PARAM:
-                // Handled in enclosing class
-                break;
-            case RETURN:
-                // Handled in enclosing class
-                break;
-            case CODE:
-            case LITERAL:
-                LiteralTree ltree = (LiteralTree) tree;
-                startElement("code");
-                text(ltree.getBody().toString());
-                endElement("code");
-                break;
-            case SEE:
-                SeeTree seeTree = (SeeTree) tree;
-                startElement(seeTree.getTagName());
-                processList(seeTree.getReference());
-                endElement(seeTree.getTagName());
-                break;
-            case COMMENT:
-                CommentTree ctree = (CommentTree) tree;
-                String text = ctree.getBody();
-                text = text.substring(4, text.length()-3);
-                comment(text);
-                break;
-            case ENTITY:
-                String name = ((EntityTree) tree).getName().toString();
-                switch (name) {
-                    case "amp":
-                        text("&");
-                        break;
-                    case "lt":
-                        text("<");
-                        break;
-                    case "gt":
-                        text(">");
-                        break;
-                    case "apos":
-                        text("'");
-                        break;
-                    case "quot":
-                        text("\"");
-                        break;
-                    default:
-                        startElement("span", list2map("class", "entity " + name));
-                        endElement("span");
-                }
-                break;
-            case DEPRECATED:
-                DeprecatedTree dtree = (DeprecatedTree) tree;
-                startElement("deprecated");
-                processList(dtree.getBody());
-                endElement("deprecated");
-                break;
-            case HIDDEN:
-                HiddenTree htree = (HiddenTree) tree;
-                startElement("hidden");
-                processList(htree.getBody());
-                endElement("hidden");
-                break;
-            case THROWS:
-            case EXCEPTION:
-                ThrowsTree ttree = (ThrowsTree) tree;
-                startElement("throws", list2map("exception", ttree.getExceptionName().toString()));
-                processList(ttree.getDescription());
-                endElement("throws");
-                break;
-            case UNKNOWN_BLOCK_TAG:
-                UnknownBlockTagTree ubttree = (UnknownBlockTagTree) tree;
-                startElement("unknown", list2map("tagname", ubttree.getTagName()));
-                processList(ubttree.getContent());
-                endElement("unknown");
-                break;
-            case ERRONEOUS:
-                ErroneousTree errTree = (ErroneousTree) tree;
-                startElement("error");
-                text(errTree.toString());
-                System.err.println(errTree.getDiagnostic().toString());
-                endElement("error");
-                break;
-            default:
-                System.err.printf("Unexpected tree kind: %s%n", tree.getKind().toString());
-                startElement("unexpected", list2map("type", tree.getKind().toString()));
-                text(tree.toString());
-                endElement("unexpected");
-                break;
-        }
-    }
-
-    private void handleRef(String wrapper, ReferenceTree ref, List<? extends DocTree> label) {
+    protected void handleRef(String wrapper, ReferenceTree ref, List<? extends DocTree> label) {
         ResolvedReference resolved = xmlProcessor.resolveReference(ref);
         Map<String,String> typeAttr = new HashMap<>();
 
         StringBuilder href = new StringBuilder();
-        typeAttr.put("class", "ref");
+        if (label == null || label.isEmpty()) {
+            typeAttr.put("class", "ref");
+        } else {
+            typeAttr.put("class", "ref label");
+        }
         typeAttr.put("java-signature", ref.getSignature());
         if (resolved.packageName != null) {
             typeAttr.put("java-package", resolved.packageName);
@@ -223,7 +76,7 @@ public abstract class MarkupBuilder {
             endElement("span");
         }
 
-        if (label.isEmpty()) {
+        if (label == null || label.isEmpty()) {
             String linktext = ref.getSignature();
             int pos = linktext.indexOf("#");
             if (pos >= 0) {
@@ -237,7 +90,7 @@ public abstract class MarkupBuilder {
         endElement(wrapper);
     }
 
-    private Map<String,String> list2map(String... attr) {
+    protected Map<String,String> list2map(String... attr) {
         if (attr.length % 2 != 0) {
             throw new IllegalArgumentException("A list2map call with an odd number of arguments");
         }

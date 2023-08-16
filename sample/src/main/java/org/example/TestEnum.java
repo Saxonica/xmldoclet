@@ -1,10 +1,10 @@
-package com.saxonica.xmldoclet;
+package org.example;
 
 /** testing
  * <p>What is this?</p>
  */
 public enum TestEnum {
-    /** is early?
+    /** is earley?
      *
      */
     Earley,

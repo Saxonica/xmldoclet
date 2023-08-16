@@ -1,6 +1,6 @@
 package com.saxonica.xmldoclet.scanners;
 
-import com.saxonica.xmldoclet.XmlProcessor;
+import com.saxonica.xmldoclet.builder.XmlProcessor;
 
 import javax.lang.model.element.TypeElement;
 

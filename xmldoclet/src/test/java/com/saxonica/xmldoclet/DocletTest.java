@@ -7,25 +7,31 @@ import javax.tools.ToolProvider;
 
 public class DocletTest {
     @Test
-    public void testfieldx() {
+    public void xmldoclet() {
         String[] docletArgs = new String[]{
                 "-doclet", XmlDoclet.class.getName(),
                 "-docletpath", "build/classes/",
-                "-sourcepath", "src/main/java/",
-                "--add-exports", "jdk.compiler/com.sun.tools.javac.code=ALL-UNNAMED",
+                "-sourcepath", "src/main/java:build/generated/sources/buildConfig/main",
                 XmlDoclet.class.getPackageName(),
-                "com.saxonica.xmldoclet.builder"
+                "com.saxonica.xmldoclet",
+                "com.saxonica.xmldoclet.builder",
+                "com.saxonica.xmldoclet.scanners"
         };
-
-        /*
-        for (String arg : docletArgs) {
-            System.err.println(arg);
-        }
-         */
 
         DocumentationTool docTool = ToolProvider.getSystemDocumentationTool();
         docTool.run(System.in, System.out, System.err, docletArgs);
     }
 
+    @Test
+    public void sample() {
+        String[] docletArgs = new String[]{
+                "-doclet", XmlDoclet.class.getName(),
+                "-docletpath", "build/classes/",
+                "-sourcepath", "../sample/src/main/java",
+                "org.example",
+        };
 
+        DocumentationTool docTool = ToolProvider.getSystemDocumentationTool();
+        docTool.run(System.in, System.out, System.err, docletArgs);
+    }
 }

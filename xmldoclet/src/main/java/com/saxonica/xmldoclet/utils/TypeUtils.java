@@ -1,20 +1,26 @@
-package com.saxonica.xmldoclet;
+package com.saxonica.xmldoclet.utils;
 
-import com.saxonica.xmldoclet.builder.MarkupBuilder;
-import com.sun.source.tree.Tree;
+import com.saxonica.xmldoclet.builder.XmlProcessor;
 
 import javax.lang.model.type.*;
 import java.util.HashMap;
 import java.util.Map;
 
 public class TypeUtils {
+    /**
+     * Construct an XML representation of the type.
+     * <p>Creates a type element on the builder.</p>
+     * @param builder The processor
+     * @param wrapper The name of the element to create for the type
+     * @param mirror The type
+     */
     public static void xmlType(XmlProcessor builder, String wrapper, TypeMirror mirror) {
         if (mirror == null) {
             return;
         }
 
         TypeKind kind = mirror.getKind();
-        if (kind.isPrimitive() || kind == TypeKind.VOID) {
+        if (kind.isPrimitive() || kind == TypeKind.VOID || kind == TypeKind.TYPEVAR) {
             TypeUtils.primitiveType(builder, wrapper, mirror);
             return;
         }
@@ -34,13 +40,19 @@ public class TypeUtils {
             return;
         }
 
-
         System.err.println("Unexpected xmlType: " + mirror);
     }
 
     private static void primitiveType(XmlProcessor builder, String wrapper, TypeMirror ptype) {
         Map<String, String> attr = new HashMap<>();
         attr.put("name", ptype.toString());
+        if (ptype.getKind() == TypeKind.TYPEVAR) {
+            attr.put("kind", "typevar");
+        } else if (ptype.getKind() == TypeKind.VOID) {
+            attr.put("kind", "void");
+        } else {
+            attr.put("kind", "primitive");
+        }
         builder.startElement(wrapper, attr);
         builder.endElement(wrapper);
     }
@@ -64,7 +76,9 @@ public class TypeUtils {
     private static void wildcardType(XmlProcessor builder, String wrapper, WildcardType wtype) {
         Map<String, String> attr = new HashMap<>();
 
-        builder.startElement(wrapper);
+        attr.put("signature", wtype.toString());
+
+        builder.startElement(wrapper, attr);
         TypeUtils.xmlType(builder, "extends", wtype.getExtendsBound());
         TypeUtils.xmlType(builder, "super", wtype.getSuperBound());
         builder.endElement(wrapper);

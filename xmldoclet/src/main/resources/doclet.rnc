@@ -1,0 +1,345 @@
+namespace s = "http://purl.oclc.org/dsdl/schematron"
+namespace h = "http://www.w3.org/1999/xhtml"
+default namespace = "https://saxonica.com/ns/doclet"
+
+modifiers =
+    (attribute access { "public"|"protected"|"private" }?,
+     attribute \default { "true" }?,
+     attribute transient { "true" }?,
+     attribute volatile { "true" }?,
+     attribute final { "true" }?,
+     attribute abstract { "true" }?,
+     attribute static { "true" }?,
+     attribute synchronized { "true" }?)
+
+start = doclet
+
+doclet =
+    element doclet {
+        admin,
+        module*,
+        package*,
+        (enum|class|interface|annotationtype)*
+    }
+
+admin =
+    element admin {
+        attribute created { xsd:dateTime },
+        attribute version { text },
+        attribute schemaVersion { text },
+        attribute hash { text },
+        empty
+    }
+
+module =
+    element module {
+        attribute name { text },
+        attribute fullname { text },
+        packageref*
+    }
+
+packageref =
+    element packageref {
+        attribute name { text },
+        attribute fullname { text },
+        empty
+    }
+
+package =
+    element package {
+        attribute simplename { text },
+        attribute name { text },
+        purpose?,
+        description?,
+        (classref|interfaceref|enumref|annotationtyperef)*
+    }
+
+classref =
+    element classref {
+        attribute package { text }?,
+        attribute fullname { text },
+        attribute name { text },
+        param*
+    }
+
+interfaceref =
+    element interfaceref {
+        attribute package { text }?,
+        attribute fullname { text },
+        attribute name { text },
+        param*
+    }
+
+enumref =
+    element enumref {
+        attribute package { text }?,
+        attribute name { text },
+        attribute fullname { text },
+        empty
+    }
+
+annotationtyperef =
+    element annotationtyperef {
+        attribute package { text }?,
+        attribute fullname { text },
+        attribute name { text },
+        empty
+    }
+
+class =
+    element class {
+        modifiers,
+        attribute package { text }?,
+        attribute nesting { text },
+        attribute type { text },
+        attribute fullname { text },
+        (superclass? & since* & see* & interfaces? & typeparams? & author* & version* & error* & unknown*),
+        purpose?,
+        description?,
+        (field|constructor|method|class|interface|enum)*
+    }
+
+annotationtype =
+    element annotationtype {
+        attribute fullname { text },
+        empty
+    }
+
+interface =
+    element interface {
+        modifiers,
+        attribute package { text }?,
+        attribute nesting { text }?,
+        attribute type { text },
+        attribute fullname { text }?,
+        (since* & see* & interfaces? & typeparams? & author* & version* & error* & unknown*),
+        purpose?,
+        description?,
+        (field|method|interface|enum)*
+    }
+
+enum =
+    element enum {
+        modifiers,
+        attribute package { text }?,
+        attribute nesting { text }?,
+        attribute type { text },
+        attribute fullname { text }?,
+        (superclass? & since* & see* & interfaces? & author* & version* & error* & unknown*),
+        purpose?,
+        description?,
+        (constructor|method|constant|field)*
+    }
+
+constant =
+    element constant {
+        modifiers,
+        attribute name { text }?,
+        purpose?,
+        description?,
+        typeDecl
+    }
+
+superclass =
+    element superclass {
+        typeDecl
+    }
+
+interfaces =
+    element interfaces {
+        interfaceref+
+    }
+
+typeparams =
+    element typeparams {
+        typeparam+
+    }
+
+typeparam =
+    element typeparam {
+        attribute fullname { text }?,
+        attribute name { text },
+        empty
+    }
+
+field =
+    element field {
+        modifiers,
+        attribute name { text },
+        attribute value { text }?,
+        (since* & see* & author* & version* & error* & unknown*),
+        purpose?,
+        description?,
+        typeDecl
+    }
+
+constructor =
+    element constructor {
+        modifiers,
+        attribute fullsig { text },
+        (since* & see* & throws* & author* & version* & error* & unknown*),
+        purpose?,
+        description?,
+        parameter*
+    }
+
+method =
+    element method {
+        modifiers,
+        attribute name { text },
+        attribute fullsig { text },
+        (since* & see* & throws* & author* & version* & error* & unknown*),
+        purpose?,
+        description?,
+        parameter*,
+        return?,
+        overrides?,
+        implements?
+    }
+
+author = 
+    element author {
+        body?
+    }
+
+version = 
+    element version {
+        body?
+    }
+
+since =
+    element since {
+        body
+    }
+
+see =
+    element see {
+        body
+    }
+
+parameter =
+    element parameter {
+        modifiers,
+        attribute name { text },
+        purpose?,
+        description?,
+        typeDecl
+    }
+
+return =
+    element return {
+        purpose?,
+        description?,
+        typeDecl
+    }
+
+implements =
+    element implements {
+        attribute interface { text },
+        empty
+    }
+
+overrides =
+    element overrides {
+        attribute method { text },
+        text
+    }
+
+throws =
+    element throws {
+        attribute exception { text },
+        purpose?,
+        description?,
+        body?
+    }
+
+typeDecl = type | array
+
+type =
+    element type {
+        attribute package { text }?,
+        attribute name { text },
+        attribute fullname { text }?,
+        attribute kind { text }?,
+        (param* & wildcard*),
+        array?
+    }
+
+param =
+    element param {
+        attribute package { text }?,
+        attribute name { text },
+        attribute fullname { text }?,
+        attribute kind { text }?,
+        (param* & wildcard*)
+    }
+
+array =
+    element array {
+        array | component
+    }
+
+component =
+    element component {
+        attribute package { text }?,
+        attribute name { text },
+        attribute fullname { text }?,
+        attribute kind { text }?,
+        (param* & wildcard*)
+    }        
+
+wildcard =
+    element wildcard {
+        attribute signature { text },
+        extends?,
+        super?
+    }
+
+extends =
+    element extends {
+        attribute package { text }?,
+        attribute name { text },
+        attribute fullname { text }?,
+        attribute kind { text }?,
+        (param* & wildcard*)
+    }
+
+super =
+    element super {
+        attribute package { text }?,
+        attribute name { text },
+        attribute fullname { text }?,
+        attribute kind { text }?,
+        (param* & wildcard*)
+    }
+
+purpose =
+    element purpose {
+        body
+    }
+
+description =
+    element description {
+        body
+    }
+
+error =
+    element error {
+        text
+    }
+
+unknown =
+    element unknown {
+        attribute tagname { text },
+        body?
+    }
+
+body = element h:body {
+           (anyHtml|text)*
+       }
+
+anyHtml = element h:* {
+              (attribute * { text }
+              | text
+              | anyHtml)*
+          }

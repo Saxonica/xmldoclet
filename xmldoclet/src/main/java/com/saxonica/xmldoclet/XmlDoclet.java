@@ -1,10 +1,9 @@
 package com.saxonica.xmldoclet;
  
-import java.util.List;
-import java.util.Locale;
-import java.util.Set;
+import java.util.*;
 import javax.lang.model.SourceVersion;
 
+import com.saxonica.xmldoclet.builder.XmlProcessor;
 import jdk.javadoc.doclet.Doclet;
 import jdk.javadoc.doclet.DocletEnvironment;
 import jdk.javadoc.doclet.Reporter;
@@ -21,15 +20,16 @@ public class XmlDoclet implements Doclet {
     /** The root directory where Javadoc is output. */
     private String destinationDir;
     /** Passed by Gradle; ignored. */
-    private String outputFile = "doclet.xml";
+    private String outputFile = null;
     private String doctitle;
     /** Passed by Gradle; ignored. */
     private String windowtitle;
     /** Passed by Gradle; ignored. */
     private boolean notimestamp;
+    private List<String> sourcepath = null;
 
     private final Set<Option> options = Set.of(
-            new DocletOption("-d", true, "passed by gradle", "<string>") {
+            new DocletOption("-d", true, "Output directory", "<string>") {
                 @Override
                 public boolean process(String option,
                                        List<String> arguments) {
@@ -37,7 +37,24 @@ public class XmlDoclet implements Doclet {
                     return OK;
                 }
             },
-            new DocletOption("-doctitle", true, "passed by gradle", "<string>") {
+            new DocletOption("-outputfile", true, "Output filename", "<string>") {
+                @Override
+                public boolean process(String option,
+                                       List<String> arguments) {
+                    outputFile = arguments.get(0);
+                    return OK;
+                }
+            },
+            new DocletOption("-sourcepath", true, "The source path", "<string>") {
+                @Override
+                public boolean process(String option,
+                                       List<String> arguments) {
+                    String paths = arguments.get(0);
+                    sourcepath = new ArrayList<>(Arrays.asList(paths.split(System.getProperty("path.separator"))));
+                    return OK;
+                }
+            },
+            new DocletOption("-doctitle", true, "Ignored", "<string>") {
                 @Override
                 public boolean process(String option,
                                        List<String> arguments) {
@@ -45,7 +62,7 @@ public class XmlDoclet implements Doclet {
                     return OK;
                 }
             },
-            new DocletOption("-windowtitle", true, "passed by gradle", "<string>") {
+            new DocletOption("-windowtitle", true, "Ignored", "<string>") {
                 @Override
                 public boolean process(String option,
                                        List<String> arguments) {
@@ -53,7 +70,7 @@ public class XmlDoclet implements Doclet {
                     return OK;
                 }
             },
-            new DocletOption("-notimestamp", false, "passed by gradle", null) {
+            new DocletOption("-notimestamp", false, "Ignored", null) {
                 @Override
                 public boolean process(String option,
                                        List<String> arguments) {
@@ -88,8 +105,52 @@ public class XmlDoclet implements Doclet {
 
     @Override
     public boolean run(DocletEnvironment environment) {
-        XmlProcessor scanner = new XmlProcessor(environment, destinationDir, outputFile);
+        if (sourcepath == null) {
+            throw new IllegalArgumentException("The -sourcepath must be provided");
+        }
+
+        XmlProcessor scanner = new XmlProcessor(environment, sourcepath, destinationDir, outputFile);
         scanner.scan();
         return OK;
+    }
+
+    abstract public class DocletOption implements Doclet.Option {
+        private final String name;
+        private final boolean hasArg;
+        private final String description;
+        private final String parameters;
+
+        DocletOption(String name, boolean hasArg,
+                     String description, String parameters) {
+            this.name = name;
+            this.hasArg = hasArg;
+            this.description = description;
+            this.parameters = parameters;
+        }
+
+        @Override
+        public int getArgumentCount() {
+            return hasArg ? 1 : 0;
+        }
+
+        @Override
+        public String getDescription() {
+            return description;
+        }
+
+        @Override
+        public Kind getKind() {
+            return Kind.STANDARD;
+        }
+
+        @Override
+        public List<String> getNames() {
+            return List.of(name);
+        }
+
+        @Override
+        public String getParameters() {
+            return hasArg ? parameters : "";
+        }
     }
 }

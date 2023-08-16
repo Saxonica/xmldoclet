@@ -1,6 +1,7 @@
 package com.saxonica.xmldoclet.scanners;
 
-import com.saxonica.xmldoclet.XmlProcessor;
+import com.saxonica.xmldoclet.utils.TypeUtils;
+import com.saxonica.xmldoclet.builder.XmlProcessor;
 import com.sun.source.doctree.DocCommentTree;
 import com.sun.source.doctree.DocTree;
 
@@ -20,37 +21,29 @@ public class XmlPackage extends XmlScanner {
     public void scan(DocTree tree) {
         Map<String,String> attributes = new HashMap<>();
         attributes.put("name", element.toString());
-        attributes.put("simpleName", element.getSimpleName().toString());
+        attributes.put("simplename", element.getSimpleName().toString());
         builder.startElement("package", attributes);
 
         if (tree instanceof DocCommentTree) {
             DocCommentTree dcTree = (DocCommentTree) tree;
             builder.processList(dcTree.getBlockTags());
-            builder.html("purpose", dcTree.getFirstSentence());
-            builder.html("description", dcTree.getBody());
+            builder.processList("purpose", dcTree.getFirstSentence());
+            builder.processList("description", dcTree.getBody());
         }
 
         for (Element child : element.getEnclosedElements()) {
-            attributes.clear();
-            attributes.put("name", child.toString());
-            attributes.put("simpleName", child.getSimpleName().toString());
-
             switch (child.getKind()) {
                 case CLASS:
-                    builder.startElement("classref", attributes);
-                    builder.endElement("classref");
+                    TypeUtils.xmlType(builder, "classref", child.asType());
                     break;
                 case INTERFACE:
-                    builder.startElement("interfaceref", attributes);
-                    builder.endElement("interfaceref");
+                    TypeUtils.xmlType(builder, "interfaceref", child.asType());
                     break;
                 case ENUM:
-                    builder.startElement("enumref", attributes);
-                    builder.endElement("enumref");
+                    TypeUtils.xmlType(builder, "enumref", child.asType());
                     break;
                 case ANNOTATION_TYPE:
-                    builder.startElement("annotationtyperef", attributes);
-                    builder.endElement("annotationtyperef");
+                    TypeUtils.xmlType(builder, "annotationtyperef", child.asType());
                     break;
                 default:
                     System.err.println("Unexpected element in package: " + child);

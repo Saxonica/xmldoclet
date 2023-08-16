@@ -26,6 +26,7 @@ dependencies {
   api 'net.sf.saxon:Saxon-HE:12.3'
 
   implementation 'net.sf.saxon:Saxon-HE:12.3'
+  implementation 'com.github.javaparser:javaparser-core:3.25.4'
 }
 
 // Apply a specific Java toolchain to ease working on different environments.
@@ -33,14 +34,6 @@ java {
   toolchain {
     languageVersion = JavaLanguageVersion.of(11)
   }
-}
-
-compileJava {
-  options.compilerArgs.add('--add-exports=jdk.compiler/com.sun.tools.javac.code=ALL-UNNAMED')
-}
-
-compileTestJava {
-  options.compilerArgs.add('--add-exports=jdk.compiler/com.sun.tools.javac.code=ALL-UNNAMED')
 }
 
 tasks.named('test') {
@@ -83,9 +76,7 @@ tasks.register('xmljavadoc', Javadoc) {
   destinationDir = file("${buildDir}/xmldoc")
   options.doclet = 'com.saxonica.xmldoclet.XmlDoclet'
   options.docletpath = configurations.xmlDoclet.files.asType(List) + file("${buildDir}/classes/java/main")
-  addMultilineStringsOption("--add-exports").setValue([
-    'jdk.compiler/com.sun.tools.javac.code=ALL-UNNAMED'
-  ])
+  options.addStringOption("sourcepath", sourceSets.main.java.srcDirs.join(System.getProperty('path.separator')))
 }
 
 // ============================================================
@@ -188,5 +179,14 @@ publishing {
         }
       }
     }
+  }
+}
+
+// ============================================================
+
+task helloWorld() {
+  doLast {
+    println(sourceSets.main.java.srcDirs.join(System.getProperty('path.separator')))
+    println(sourceSets.main.allJava.classesDirectory)
   }
 }

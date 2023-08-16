@@ -1,6 +1,6 @@
 package com.saxonica.xmldoclet.scanners;
 
-import com.saxonica.xmldoclet.XmlProcessor;
+import com.saxonica.xmldoclet.builder.XmlProcessor;
 import com.sun.source.doctree.DocCommentTree;
 import com.sun.source.doctree.DocTree;
 
@@ -20,21 +20,21 @@ public class XmlModule extends XmlScanner {
     @Override
     public void scan(DocTree tree) {
         Map<String,String> attributes = new HashMap<>();
-        attributes.put("name", element.getQualifiedName().toString());
-        attributes.put("simpleName", element.getSimpleName().toString());
+        attributes.put("fullname", element.getQualifiedName().toString());
+        attributes.put("name", element.getSimpleName().toString());
         builder.startElement("module", attributes);
 
         if (tree instanceof DocCommentTree) {
             DocCommentTree dcTree = (DocCommentTree) tree;
             builder.processList(dcTree.getBlockTags());
-            builder.html("purpose", dcTree.getFirstSentence());
-            builder.html("description", dcTree.getBody());
+            builder.processList("purpose", dcTree.getFirstSentence());
+            builder.processList("description", dcTree.getBody());
         }
 
         for (Element child : element.getEnclosedElements()) {
             attributes.clear();
-            attributes.put("name", child.toString());
-            attributes.put("simpleName", child.getSimpleName().toString());
+            attributes.put("fullname", child.toString());
+            attributes.put("name", child.getSimpleName().toString());
 
             switch (child.getKind()) {
                 case PACKAGE:
