@@ -94,7 +94,7 @@ task dist(dependsOn: ["jar", "test"]) {
   }
   doLast {
     copy {
-      from "${projectDir}/README.md"
+      from "${projectDir}/../README.md"
       into "${buildDir}/stage/docs"
     }
   }
