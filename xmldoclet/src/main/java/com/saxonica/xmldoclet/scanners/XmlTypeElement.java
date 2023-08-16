@@ -1,11 +1,10 @@
 package com.saxonica.xmldoclet.scanners;
 
-import com.saxonica.xmldoclet.TypeUtils;
-import com.saxonica.xmldoclet.XmlProcessor;
+import com.saxonica.xmldoclet.utils.TypeUtils;
+import com.saxonica.xmldoclet.builder.XmlProcessor;
 import com.sun.source.doctree.DocCommentTree;
 import com.sun.source.doctree.DocTree;
 
-import javax.lang.model.element.Modifier;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.TypeParameterElement;
 import javax.lang.model.type.DeclaredType;
@@ -25,11 +24,13 @@ public abstract class XmlTypeElement extends XmlScanner {
 
     public void scan(DocTree tree) {
         Map<String,String> attr = new HashMap<>();
-        attr.put("fulltype", element.getQualifiedName().toString());
+        attr.put("fullname", element.getQualifiedName().toString());
         attr.put("package", element.getEnclosingElement().toString());
         attr.put("type", element.getSimpleName().toString());
         attr.put("nesting", element.getNestingKind().toString().toLowerCase());
         attr.putAll(modifierAttributes(element));
+
+        //System.err.println(typeName() + " " + element.getSimpleName() + " :: " + element.getEnclosingElement());
 
         builder.startElement(typeName(), attr);
 
@@ -42,7 +43,7 @@ public abstract class XmlTypeElement extends XmlScanner {
         if (!element.getInterfaces().isEmpty()) {
             builder.startElement("interfaces");
             for (TypeMirror tm : element.getInterfaces()) {
-                TypeUtils.xmlType(builder, "interface", tm);
+                TypeUtils.xmlType(builder, "interfaceref", tm);
             }
             builder.endElement("interfaces");
         }
@@ -51,9 +52,7 @@ public abstract class XmlTypeElement extends XmlScanner {
             builder.startElement("typeparams");
             for (TypeParameterElement tp : element.getTypeParameters()) {
                 attr.clear();
-                attr.put("fulltype", tp.toString());
-                //attr.put("package", packageName(tp.toString()));
-                //attr.put("type", className(tp.toString()));
+                attr.put("name", tp.toString());
                 builder.startElement("typeparam", attr);
                 builder.endElement("typeparam");
             }
@@ -63,8 +62,8 @@ public abstract class XmlTypeElement extends XmlScanner {
         if (tree instanceof DocCommentTree) {
             DocCommentTree dcTree = (DocCommentTree) tree;
             builder.processList(dcTree.getBlockTags());
-            builder.html("purpose", dcTree.getFirstSentence());
-            builder.html("description", dcTree.getBody());
+            builder.processList("purpose", dcTree.getFirstSentence());
+            builder.processList("description", dcTree.getBody());
         }
 
         builder.xmlscan(element.getEnclosedElements());

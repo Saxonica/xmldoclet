@@ -1,11 +1,13 @@
 package com.saxonica.xmldoclet.scanners;
 
-import com.saxonica.xmldoclet.TypeUtils;
-import com.saxonica.xmldoclet.XmlProcessor;
+import com.saxonica.xmldoclet.utils.TypeUtils;
+import com.saxonica.xmldoclet.builder.XmlProcessor;
 import com.sun.source.doctree.DocCommentTree;
 import com.sun.source.doctree.DocTree;
+import com.sun.source.doctree.ParamTree;
 
-import javax.lang.model.element.Modifier;
+import javax.lang.model.element.Element;
+import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.VariableElement;
 import java.util.HashMap;
 import java.util.Map;
@@ -28,7 +30,7 @@ public abstract class XmlVariableElement extends XmlScanner {
         if (element.getConstantValue() != null) {
             if (element.getConstantValue() instanceof Character) {
                 Character ch = (Character) element.getConstantValue();
-                if (Character.isSurrogate(ch)) {
+                if (Character.isSurrogate(ch) || ch < ' ') {
                     attr.put("value", String.format("(char) 0x%04x", (int) ch));
                 } else {
                     attr.put("value", element.getConstantValue().toString());
@@ -40,14 +42,38 @@ public abstract class XmlVariableElement extends XmlScanner {
 
         builder.startElement(typeName(), attr);
 
-        TypeUtils.xmlType(builder, "type", element.asType());
+        // If this is a parameter, get the ParamTree block from
+        // our parent...
+        ParamTree paramTree = null;
+        Element parent = element.getEnclosingElement();
+        if (parent.getKind() == ElementKind.METHOD || parent.getKind() == ElementKind.CONSTRUCTOR) {
+            DocCommentTree parentTree = builder.environment.getDocTrees().getDocCommentTree(parent);
+            if (parentTree != null) {
+                for (DocTree block : parentTree.getBlockTags()) {
+                    if (block.getKind() == DocTree.Kind.PARAM) {
+                        ParamTree ptree = (ParamTree) block;
+                        if (ptree.getName().toString().equals(element.getSimpleName().toString())) {
+                            paramTree = ptree;
+                            break;
+                        }
+                    }
+
+                }
+            }
+        }
+
+        if (paramTree != null) {
+            builder.processList("purpose", paramTree.getDescription());
+        }
 
         if (tree instanceof DocCommentTree) {
             DocCommentTree dcTree = (DocCommentTree) tree;
             builder.processList(dcTree.getBlockTags());
-            builder.html("purpose", dcTree.getFirstSentence());
-            builder.html("description", dcTree.getBody());
+            builder.processList("purpose", dcTree.getFirstSentence());
+            builder.processList("description", dcTree.getBody());
         }
+
+        TypeUtils.xmlType(builder, "type", element.asType());
 
         builder.endElement(typeName());
     }

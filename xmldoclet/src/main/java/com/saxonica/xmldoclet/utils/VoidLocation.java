@@ -1,4 +1,4 @@
-package com.saxonica.xmldoclet;
+package com.saxonica.xmldoclet.utils;
 
 import net.sf.saxon.s9api.Location;
 

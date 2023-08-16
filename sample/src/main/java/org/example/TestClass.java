@@ -1,12 +1,11 @@
-package com.saxonica.xmldoclet;
+package org.example;
 
-
-import com.sun.source.doctree.ReferenceTree;
 import jdk.javadoc.doclet.DocletEnvironment;
 import jdk.javadoc.doclet.Reporter;
+import net.sf.saxon.lib.Feature;
 import net.sf.saxon.serialize.charcode.CharacterSet;
 
-import java.util.Locale;
+import java.util.*;
 
 /**
  * A class to hold some static constants and methods associated with processing UTF16 and surrogate pairs
@@ -53,6 +52,9 @@ public class TestClass implements CharacterSet {
     public static final char SURROGATE1_MAX = (char)0xDBFF;
     public static final char SURROGATE2_MIN = (char)0xDC00;
     public static final char SURROGATE2_MAX = (char)0xDFFF;
+    public static final char NULL = (char)0x0;
+    public static final char LT = (char)0x3C;
+    public static final char SOH = (char)0x1;
 
     /**
      * Return the non-BMP character corresponding to a given surrogate pair
@@ -77,20 +79,21 @@ public class TestClass implements CharacterSet {
      * <p>I can haz &amp; &copy; <code>code</code> and <em>enphasis</em>.</p>
      * <!-- this is a comment? -->
      * <p>{@code 3 < 5}</p>
-     * <p>What about {@link XmlProcessor} here?</p>
-     * <p>What about testing {@link com.saxonica.xmldoclet.scanners.XmlExecutableElement#builder builder} and {@linkplain XmlProcessor}.</p>
-     * <p>What about testing {@link XmlProcessor#comment(String)}, {@link #combinePair(char, char)}</p>
+     * <p>What about {@link Sample} here?</p>
+     * <p>What about testing {@link org.example.TestClass#testing(String)} and {@linkplain Sample}.</p>
+     * <p>What about testing {@link #combinePair(char, char)}</p>
      * <p>And {@link com.saxonica.xmldoclet.builder.MarkupBuilder}</p>
-     * <p>Or {@linkplain XmlProcessor#resolveReference(ReferenceTree)}, {@link jdk.javadoc.doclet.Doclet#run(DocletEnvironment)}</p>
+     * <p>Or {@linkplain TestInterface#foo()}, {@link jdk.javadoc.doclet.Doclet#run(DocletEnvironment)}</p>
      * <p>{@link jdk.javadoc.doclet.Doclet#init(Locale, Reporter)}</p>
      * <p>{@link Spooner#m()}</p>
      * <p>Try {@link Spooner}</p>
-     * <p>Try {@link DocletOption}, {@link com.saxonica.xmldoclet}</p>
      * <p>Or a {@literal thing}.</p>
-     * @see <a href="https://nineml.org">NineML</a>
+     * @see <a href="https://example.org">Example.org</a>
      * @param spoon the string {@link com.sun.source.doctree.DocTree}
-     * @throws IllegalAccessError when
+     * @throws IllegalAccessError when something goes wrong
+     * @throws NullPointerException: this is an error. No colon is allowed in the exception name.
      * @see jdk.javadoc.doclet.Doclet#init(Locale, Reporter)
+     * @see net.sf.saxon.s9api.Processor#getConfigurationProperty(Feature)
      * @return something
      */
     public int testing(String spoon) {

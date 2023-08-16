@@ -1,0 +1,46 @@
+plugins {
+  id 'application'
+}
+
+repositories {
+  mavenLocal()
+  mavenCentral()
+}
+
+configurations {
+  xmlDoclet.extendsFrom implementation
+}
+
+dependencies {
+  testImplementation 'org.junit.jupiter:junit-jupiter:5.9.2'
+
+  testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+
+  implementation 'nu.validator.htmlparser:htmlparser:1.4'
+  implementation 'net.sf.saxon:Saxon-HE:12.3'
+  implementation 'com.github.javaparser:javaparser-core:3.25.4'
+  implementation files('../xmldoclet/build/libs/xmldoclet.jar')
+}
+
+// Apply a specific Java toolchain to ease working on different environments.
+java {
+  toolchain {
+    languageVersion = JavaLanguageVersion.of(11)
+  }
+}
+
+tasks.named('test') {
+  useJUnitPlatform()
+}
+
+// ============================================================
+
+tasks.register('xmljavadoc', Javadoc) {
+  group = "documentation"
+  classpath = configurations.xmlDoclet
+  source = sourceSets.main.allJava
+  destinationDir = file("${buildDir}/xmldoc")
+  options.doclet = 'com.saxonica.xmldoclet.XmlDoclet'
+  options.docletpath = configurations.xmlDoclet.files.asType(List) + file("${buildDir}/classes/java/main")
+  options.addStringOption("sourcepath", sourceSets.main.java.srcDirs.join(System.getProperty('path.separator')))
+}

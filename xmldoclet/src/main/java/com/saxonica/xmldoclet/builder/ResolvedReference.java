@@ -1,4 +1,4 @@
-package com.saxonica.xmldoclet;
+package com.saxonica.xmldoclet.builder;
 
 import java.util.ArrayList;
 import java.util.List;
