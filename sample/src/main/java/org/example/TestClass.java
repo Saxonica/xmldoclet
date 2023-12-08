@@ -12,6 +12,8 @@ import java.util.*;
  */
 
 public class TestClass implements CharacterSet {
+    public static final TestClass CONSTANTVALUE = new TestClass();
+
     /** The tick! With {@value}*/
     protected final int spoon = 17;
 
@@ -43,7 +45,6 @@ public class TestClass implements CharacterSet {
     public String getCanonicalName() {
         return "UTF-16";
     }
-
 
     public static final int NONBMP_MIN = 0x10000;
     public static final int NONBMP_MAX = 0x10FFFF;

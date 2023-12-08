@@ -6,10 +6,9 @@ import com.sun.source.doctree.*;
 
 import javax.lang.model.element.*;
 import javax.lang.model.type.DeclaredType;
+import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public abstract class XmlExecutableElement extends XmlScanner {
     private final ExecutableElement element;
@@ -27,6 +26,14 @@ public abstract class XmlExecutableElement extends XmlScanner {
         // Hack
         if (!"constructor".equals(typeName())) {
             attr.put("name", element.getSimpleName().toString());
+        }
+
+        Map<String,DeclaredType> thrownTypes = new HashMap<>();
+        for (TypeMirror ttype : element.getThrownTypes()) {
+            Element telem = ((DeclaredType) ttype).asElement();
+            // N.B. I'd like to use the fully qualified name here (it's what toString() returns),
+            // but I can't work out how to get the fully qualified name from the ThrowsTree
+            thrownTypes.put(telem.getSimpleName().toString(), (DeclaredType) ttype);
         }
 
         StringBuilder fullparam = new StringBuilder();
@@ -69,12 +76,39 @@ public abstract class XmlExecutableElement extends XmlScanner {
                         break;
                     default:
                         builder.processTree(block);
+
+                        if (block.getKind() == DocTree.Kind.THROWS) {
+                            String name = ((ThrowsTree) block).getExceptionName().getSignature();
+                            thrownTypes.remove(name);
+                        }
                         break;
                 }
             }
+
+            // Were there some block comments, but also some undocumented exceptions?
+            if (!thrownTypes.isEmpty()) {
+                for (String name : thrownTypes.keySet()) {
+                    Map<String,String> tattr = new HashMap<>();
+                    tattr.put("exception", name);
+                    builder.startElement("throws", tattr);
+                    builder.endElement("throws");
+                }
+                thrownTypes.clear();
+            }
+
             builder.processList("purpose", dcTree.getFirstSentence());
             builder.processList("description", dcTree.getBody());
         }
+
+        // Are there undocumented exceptions (but also there were no block comments at all)?
+        if (!thrownTypes.isEmpty()) {
+            for (String name : thrownTypes.keySet()) {
+                Map<String,String> tattr = new HashMap<>();
+                tattr.put("exception", name);
+                builder.startElement("throws", tattr);
+                builder.endElement("throws");
+            }
+       }
 
         builder.xmlscan(element.getParameters());
 
