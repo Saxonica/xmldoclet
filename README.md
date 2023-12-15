@@ -111,7 +111,6 @@ Notes:
   `(char) 0x…` is used for the value instead of the character’s
   literal value.
 
-
 ## Feedback welcome
 
 Much of the output is the result of experimentation and exploring the

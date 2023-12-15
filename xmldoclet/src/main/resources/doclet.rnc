@@ -142,7 +142,36 @@ constant =
 
 superclass =
     element superclass {
-        typeDecl
+        typeDecl,
+        inherited?,
+        iinterface*,
+        superclass?
+    }
+
+inherited =
+    element inherited {
+        (ifield | imethod)*
+    }
+
+ifield =
+    element field {
+        attribute name { text },
+        empty
+    }
+
+imethod =
+    element method {
+        attribute name { text },
+        empty
+    }
+
+iinterface =
+    element interface {
+        attribute package { text }?,
+        attribute fullname { text },
+        attribute name { text },
+        ifield*,
+        iinterface*
     }
 
 interfaces =
