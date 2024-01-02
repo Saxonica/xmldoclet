@@ -158,7 +158,16 @@ public class XmlProcessor extends ElementScanner9<Void, XmlProcessor> {
         builder = new XmlBuilder(this);
         startDocument();
         for (Element element : elements) {
-            xmlscan(element);
+            if (element.getKind() == ElementKind.CLASS) {
+                TypeElement xelem = (TypeElement) element;
+                if (xelem.getNestingKind() == NestingKind.TOP_LEVEL) {
+                    // Don't output nested, inner classes at the top level. They'll automatically
+                    // be output in the surrounding class
+                    xmlscan(element);
+                }
+            } else {
+                xmlscan(element);
+            }
         }
         endDocument();
 
