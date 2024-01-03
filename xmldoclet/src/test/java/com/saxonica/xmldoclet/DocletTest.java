@@ -41,10 +41,11 @@ public class DocletTest {
     public void saxonSample() {
         String[] docletArgs = new String[]{
                 "-doclet", XmlDoclet.class.getName(),
+                "-private",
                 "-docletpath", "build/classes/",
                 "-classpath", "/Users/ndw/.m2/repository/jline/jline/2.14.6/jline-2.14.6.jar:/Volumes/Saxonica/src/saxonica/saxondev/build/releases/eej/lib/xmlresolver-5.2.2.jar",
                 "-sourcepath", "../../saxondev/src/main/java",
-                "net.sf.saxon.serialize", "net.sf.saxon.event"
+                "net.sf.saxon.trans"
         };
 
         DocumentationTool docTool = ToolProvider.getSystemDocumentationTool();
