@@ -32,7 +32,8 @@ public abstract class XmlExecutableElement extends XmlScanner {
         for (TypeMirror ttype : element.getThrownTypes()) {
             Element telem = ((DeclaredType) ttype).asElement();
             // N.B. I'd like to use the fully qualified name here (it's what toString() returns),
-            // but I can't work out how to get the fully qualified name from the ThrowsTree
+            // but I can't work out how to get the fully qualified name from the ThrowsTree.
+            // Note that we try to be careful in the matching code below.
             thrownTypes.put(telem.getSimpleName().toString(), (DeclaredType) ttype);
         }
 
@@ -79,7 +80,17 @@ public abstract class XmlExecutableElement extends XmlScanner {
 
                         if (block.getKind() == DocTree.Kind.THROWS) {
                             String name = ((ThrowsTree) block).getExceptionName().getSignature();
-                            thrownTypes.remove(name);
+                            // The name could be either com.example.Exception or just Exception.
+                            // If either of those occurs in thrownTypes, we want to remove it.
+                            String removeKey = null;
+                            for (String key : thrownTypes.keySet()) {
+                                if (name.equals(key) || name.equals(thrownTypes.get(key).toString())) {
+                                    removeKey = key;
+                                }
+                            }
+                            if (removeKey != null) {
+                                thrownTypes.remove(removeKey);
+                            }
                         }
                         break;
                 }
@@ -89,7 +100,7 @@ public abstract class XmlExecutableElement extends XmlScanner {
             if (!thrownTypes.isEmpty()) {
                 for (String name : thrownTypes.keySet()) {
                     Map<String,String> tattr = new HashMap<>();
-                    tattr.put("exception", name);
+                    tattr.put("exception", thrownTypes.get(name).toString());
                     builder.startElement("throws", tattr);
                     builder.endElement("throws");
                 }

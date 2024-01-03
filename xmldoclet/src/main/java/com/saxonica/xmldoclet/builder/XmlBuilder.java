@@ -308,8 +308,13 @@ public class XmlBuilder extends MarkupBuilder {
                 break;
             case PARAM:
             case RETURN:
-            case DEPRECATED:
                 // Handled in enclosing class
+                break;
+            case DEPRECATED:
+                DeprecatedTree depTree = (DeprecatedTree) tree;
+                startElement(depTree.getTagName());
+                html(depTree.getBody());
+                endElement(depTree.getTagName());
                 break;
             case CODE:
             case LITERAL:

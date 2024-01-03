@@ -55,6 +55,9 @@ public abstract class XmlTypeElement extends XmlScanner {
                 attr.clear();
                 attr.put("name", tp.toString());
                 builder.startElement("typeparam", attr);
+                for (TypeMirror bound : tp.getBounds()) {
+                    TypeUtils.xmlType(builder, "type", bound);
+                }
                 builder.endElement("typeparam");
             }
             builder.endElement("typeparams");
