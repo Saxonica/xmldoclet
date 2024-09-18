@@ -76,6 +76,13 @@ public abstract class XmlTypeElement extends XmlScanner {
     }
 
     private void showSuperclass(TypeElement element, DeclaredType superclass, Implemented impl) {
+        if (element.getSuperclass() instanceof DeclaredType) {
+            String name = ((DeclaredType) element.getSuperclass()).toString();
+            if ("java.lang.Object".equals(name)) {
+                return;
+            }
+        }
+
         builder.startElement("superclass");
         TypeUtils.xmlType(builder, "type", element.getSuperclass());
 
@@ -84,7 +91,7 @@ public abstract class XmlTypeElement extends XmlScanner {
         List<Element> inherited = new ArrayList<>();
         for (Element elem : enclosed) {
             String name = elem.toString();
-            if (elem.getModifiers().contains(Modifier.PUBLIC) || elem.getModifiers().contains(Modifier.PROTECTED)) {
+            if (!elem.getModifiers().contains(Modifier.PRIVATE)) {
                 if (elem.getKind() == ElementKind.FIELD) {
                     if (!impl.fields.contains(name)) {
                         impl.fields.add(name);
@@ -104,7 +111,7 @@ public abstract class XmlTypeElement extends XmlScanner {
             builder.startElement("inherited");
             for (Element elem : inherited) {
                 Map<String, String> amap = new HashMap<>();
-                amap.put("name", elem.getSimpleName().toString());
+                amap.put("name", elem.toString());
                 if (elem.getKind() == ElementKind.FIELD) {
                     builder.startElement("field", amap);
                     builder.endElement("field");
@@ -122,21 +129,6 @@ public abstract class XmlTypeElement extends XmlScanner {
             TypeMirror sstype = setype.getSuperclass();
 
             showInterfaces(setype, impl);
-
-/*
-
-            if (!setype.getInterfaces().isEmpty()) {
-                builder.startElement("interfaces");
-                for (TypeMirror tm : setype.getInterfaces()) {
-                    if (tm.getKind() == TypeKind.DECLARED) {
-                        DeclaredType dtm = (DeclaredType) tm;
-                        System.err.println(dtm);
-                    }
-                    TypeUtils.xmlType(builder, "interfaceref", tm);
-                }
-                builder.endElement("interfaces");
-            }
- */
 
             if (sstype.getKind() == TypeKind.DECLARED) {
                 showSuperclass(setype, (DeclaredType) sstype, impl);
@@ -171,6 +163,14 @@ public abstract class XmlTypeElement extends XmlScanner {
                         builder.startElement("field", amap);
                         builder.endElement("field");
                     }
+                    if (celem.getKind() == ElementKind.METHOD) {
+                        if (!impl.methods.contains(celem.toString())) {
+                            amap = new HashMap<>();
+                            amap.put("name", celem.toString());
+                            builder.startElement("method", amap);
+                            builder.endElement("method");
+                        }
+                    }
                 }
 
                 showInterfaces(ttm, impl);
@@ -181,7 +181,9 @@ public abstract class XmlTypeElement extends XmlScanner {
 
     private void updateImplemented(TypeElement element, Implemented impl) {
         for (Element elem : element.getEnclosedElements()) {
-            if (elem.getModifiers().contains(Modifier.PUBLIC) || elem.getModifiers().contains(Modifier.PROTECTED)) {
+            Set<Modifier> modifiers = elem.getModifiers();
+            if (!(modifiers.contains(Modifier.PRIVATE))) {
+                ElementKind kind = elem.getKind();
                 if (elem.getKind() == ElementKind.FIELD) {
                     impl.fields.add(elem.toString());
                 }
