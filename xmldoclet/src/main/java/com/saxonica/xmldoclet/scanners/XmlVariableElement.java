@@ -1,7 +1,7 @@
 package com.saxonica.xmldoclet.scanners;
 
-import com.saxonica.xmldoclet.utils.TypeUtils;
 import com.saxonica.xmldoclet.builder.XmlProcessor;
+import com.saxonica.xmldoclet.utils.TypeUtils;
 import com.sun.source.doctree.DocCommentTree;
 import com.sun.source.doctree.DocTree;
 import com.sun.source.doctree.ParamTree;
@@ -36,7 +36,21 @@ public abstract class XmlVariableElement extends XmlScanner {
                     attr.put("value", element.getConstantValue().toString());
                 }
             } else {
-                attr.put("value", element.getConstantValue().toString());
+                StringBuilder sb = new StringBuilder();
+                String value = element.getConstantValue().toString();
+                int offset = 0;
+                int length = value.length();
+                while (offset < length) {
+                    char cur = value.charAt(offset);
+                    if (cur < ' ' || cur > 0x7f) {
+                        sb.append(String.format("\\u%04x", (int) cur));
+                    } else {
+                        sb.append(cur);
+                    }
+                    offset += Character.charCount(cur);
+                }
+
+                attr.put("value", sb.toString());
             }
         }
 
