@@ -1,6 +1,6 @@
 package org.example;
 
-public class Implementation extends AbstractClass {
+public abstract class Implementation extends AbstractClass {
     @Override
     public void foo() {
         // nop
@@ -9,5 +9,19 @@ public class Implementation extends AbstractClass {
     @Override
     public void bar() {
         // nop
+    }
+
+    @Override
+    void one(int value) {
+        System.err.println("int: " + value);
+    }
+
+    @Override
+    void one(int value, int otherValue) {
+        System.err.println("int: " + value + ", " + otherValue);
+    }
+
+    void inImpl() {
+        System.err.println("In impl");
     }
 }
