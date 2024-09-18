@@ -12,4 +12,5 @@ public interface TestInterface {
      * <p>See also {@link #foo()}.</p>
      */
     void bar();
+    void baz();
 }

@@ -5,6 +5,7 @@ import jdk.javadoc.doclet.Reporter;
 import net.sf.saxon.lib.Feature;
 import net.sf.saxon.serialize.charcode.CharacterSet;
 
+import java.lang.reflect.Parameter;
 import java.util.*;
 
 /**
@@ -13,11 +14,18 @@ import java.util.*;
 
 public class TestClass implements CharacterSet {
     public static final TestClass CONSTANTVALUE = new TestClass();
+    protected ParameterizedClass<String> stringParameterizedClass = new ParameterizedClass<>();
 
     /** The tick! With {@value}*/
     protected final int spoon = 17;
 
     private static final TestClass theInstance = new TestClass();
+
+    /**
+     * Constant indicating 1.0
+     */
+
+    public static final int XML10 = 10;
 
     /**
      * Private constructor to force the singular instance to be used
