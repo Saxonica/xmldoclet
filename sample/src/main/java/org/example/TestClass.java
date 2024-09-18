@@ -92,7 +92,7 @@ public class TestClass implements CharacterSet {
      * @see <a href="https://example.org">Example.org</a>
      * @param spoon the string {@link com.sun.source.doctree.DocTree}
      * @throws IllegalAccessError when something goes wrong
-     * @throws NullPointerException: this is an error. No colon is allowed in the exception name.
+     * @throws NullPointerException this is an error. No colon is allowed in the exception name.
      * @see jdk.javadoc.doclet.Doclet#init(Locale, Reporter)
      * @see net.sf.saxon.s9api.Processor#getConfigurationProperty(Feature)
      * @return something
