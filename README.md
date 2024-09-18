@@ -120,4 +120,18 @@ incomplete or incorrect, please [open an issue](https://github.com/Saxonica/xmld
 
 ## Change log
 
+* **0.6.0** Improved handling of method names and inheritance
+  
+  Changed the “name” of methods to include the parameter types. (i.e., `foo(int)`
+  instead of `foo`). This allows them to be distinguished.
+  
+  Fixed a bug where the methods inherited from interfaces were not shown.
+  
+  Fixed a bug in computing visibility. Previously, the code looked for an explicit
+  ~public~ or ~protected~ modifier. Now it *excludes* things explicitly marked ~private~.
+  
+  Experimentally removed ~java.lang.Object~ as a supertype in the generated XML.
+
+The previous version looked for methods and fields marked as public or protected, but that's not the same thing!
+
 * **0.5.0** String constants now use “backslash-U” escapes for non-ASCII characters.
