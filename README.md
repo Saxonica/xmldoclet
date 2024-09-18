@@ -117,3 +117,7 @@ Much of the output is the result of experimentation and exploring the
 Javadoc APIs. If you discover that xmldoclet produces output that
 doesn’t conform to the schema, or if you think that the output is
 incomplete or incorrect, please [open an issue](https://github.com/Saxonica/xmldoclet/issues).
+
+## Change log
+
+* **0.5.0** String constants now use “backslash-U” escapes for non-ASCII characters.
