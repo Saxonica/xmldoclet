@@ -1,7 +1,6 @@
 package org.example;
 
 public class IterImpl implements SequenceIterator {
-    @Override
     public boolean hasNext() {
         return false;
     }

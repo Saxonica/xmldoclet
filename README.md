@@ -120,6 +120,12 @@ incomplete or incorrect, please [open an issue](https://github.com/Saxonica/xmld
 
 ## Change log
 
+* **0.7.0** Improved presentation of interfaces
+
+  Reworked the way interfaces are presented so that the methods inherited
+  from those interfaces (i.e., the methods not actually implemented on this class)
+  are shown.
+
 * **0.6.0** Improved handling of method names and inheritance
   
   Changed the “name” of methods to include the parameter types. (i.e., `foo(int)`

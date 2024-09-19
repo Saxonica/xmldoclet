@@ -35,16 +35,20 @@ public abstract class XmlTypeElement extends XmlScanner {
 
         builder.startElement(typeName(), attr);
 
+        Implemented impl = new Implemented();
+        updateImplemented(element, impl);
+
         if (element.getSuperclass() instanceof DeclaredType) {
-            Implemented impl = new Implemented();
-            updateImplemented(element, impl);
             showSuperclass(element, (DeclaredType) element.getSuperclass(), impl);
         }
 
         if (!element.getInterfaces().isEmpty()) {
             builder.startElement("interfaces");
             for (TypeMirror tm : element.getInterfaces()) {
-                TypeUtils.xmlType(builder, "interfaceref", tm);
+                // Reset the implemented list each time
+                Implemented classimpl = new Implemented(impl);
+                updateImplemented(element, classimpl);
+                showInterfaces(element, (DeclaredType) tm, impl);
             }
             builder.endElement("interfaces");
         }
@@ -76,15 +80,20 @@ public abstract class XmlTypeElement extends XmlScanner {
     }
 
     private void showSuperclass(TypeElement element, DeclaredType superclass, Implemented impl) {
+        if ("java.lang.Object".equals(superclass.toString())) {
+            return;
+        }
+        /*
         if (element.getSuperclass() instanceof DeclaredType) {
             String name = ((DeclaredType) element.getSuperclass()).toString();
             if ("java.lang.Object".equals(name)) {
                 return;
             }
         }
+         */
 
         builder.startElement("superclass");
-        TypeUtils.xmlType(builder, "type", element.getSuperclass());
+        TypeUtils.xmlType(builder, "type", superclass);
 
         List<? extends Element> enclosed = superclass.asElement().getEnclosedElements();
 
@@ -128,7 +137,7 @@ public abstract class XmlTypeElement extends XmlScanner {
             TypeElement setype = (TypeElement) selem;
             TypeMirror sstype = setype.getSuperclass();
 
-            showInterfaces(setype, impl);
+            //showInterfaces(setype, impl);
 
             if (sstype.getKind() == TypeKind.DECLARED) {
                 showSuperclass(setype, (DeclaredType) sstype, impl);
@@ -139,44 +148,68 @@ public abstract class XmlTypeElement extends XmlScanner {
         builder.endElement("superclass");
     }
 
-    private void showInterfaces(TypeElement element, Implemented impl) {
-        if (element.getInterfaces().isEmpty()) {
-            return;
+    private void showInterfaces(TypeElement element, DeclaredType xinter, Implemented impl) {
+        Map<String, String> attr = new HashMap<>();
+        attr.put("name", xinter.asElement().getSimpleName().toString());
+        attr.put("fullname", xinter.asElement().toString());
+        attr.put("package", xinter.asElement().getEnclosingElement().toString());
+        builder.startElement("interface", attr);
+
+        for (TypeMirror tm : xinter.getTypeArguments()) {
+            attr.clear();
+            TypeUtils.xmlType(builder, "param", tm);
         }
 
-        for (TypeMirror tm : element.getInterfaces()) {
-            if (tm.getKind() == TypeKind.DECLARED) {
-                TypeElement ttm = (TypeElement) ((DeclaredType) tm).asElement();
-                Map<String, String> amap = new HashMap<>();
-                amap.put("fullname", ttm.toString());
-                amap.put("name", ttm.getSimpleName().toString());
-                if (ttm.toString().contains(".")) {
-                    amap.put("package", ttm.toString().substring(0, ttm.toString().lastIndexOf(".")));
-                }
+        List<? extends Element> enclosed = xinter.asElement().getEnclosedElements();
 
-                builder.startElement("interface", amap);
-
-                for (Element celem : ttm.getEnclosedElements()) {
-                    if (celem.getKind() == ElementKind.FIELD) {
-                        amap = new HashMap<>();
-                        amap.put("name", celem.getSimpleName().toString());
-                        builder.startElement("field", amap);
-                        builder.endElement("field");
-                    }
-                    if (celem.getKind() == ElementKind.METHOD) {
-                        if (!impl.methods.contains(celem.toString())) {
-                            amap = new HashMap<>();
-                            amap.put("name", celem.toString());
-                            builder.startElement("method", amap);
-                            builder.endElement("method");
-                        }
+        List<Element> inherited = new ArrayList<>();
+        for (Element elem : enclosed) {
+            String name = elem.toString();
+            if (!elem.getModifiers().contains(Modifier.PRIVATE)) {
+                if (elem.getKind() == ElementKind.FIELD) {
+                    if (!impl.fields.contains(name)) {
+                        impl.fields.add(name);
+                        inherited.add(elem);
                     }
                 }
-
-                showInterfaces(ttm, impl);
-                builder.endElement("interface");
+                if (elem.getKind() == ElementKind.METHOD) {
+                    if (!impl.methods.contains(name)) {
+                        impl.methods.add(name);
+                        inherited.add(elem);
+                    }
+                }
             }
         }
+
+        if (!inherited.isEmpty()) {
+            builder.startElement("inherited");
+            for (Element elem : inherited) {
+                Map<String, String> amap = new HashMap<>();
+                amap.put("name", elem.toString());
+                if (elem.getKind() == ElementKind.FIELD) {
+                    builder.startElement("field", amap);
+                    builder.endElement("field");
+                } else {
+                    builder.startElement("method", amap);
+                    builder.endElement("method");
+                }
+            }
+            builder.endElement("inherited");
+        }
+
+        Element selem = xinter.asElement();
+        if (selem instanceof TypeElement) {
+            TypeElement setype = (TypeElement) selem;
+            TypeMirror sstype = setype.getSuperclass();
+
+            if (!setype.getInterfaces().isEmpty()) {
+                for (TypeMirror tm : setype.getInterfaces()) {
+                    showInterfaces(element, (DeclaredType) tm, impl);
+                }
+            }
+        }
+
+        builder.endElement("interface");
     }
 
     private void updateImplemented(TypeElement element, Implemented impl) {
@@ -195,6 +228,11 @@ public abstract class XmlTypeElement extends XmlScanner {
     }
 
     private static class Implemented {
+        public Implemented() {}
+        public Implemented(Implemented impl) {
+            fields.addAll(impl.fields);
+            methods.addAll(impl.methods);
+        }
         public final Set<String> fields = new HashSet<>();
         public final Set<String> methods = new HashSet<>();
     }
