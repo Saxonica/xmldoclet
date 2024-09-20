@@ -30,6 +30,8 @@ public class DocletTest {
                 "-docletpath", "build/classes/",
                 "-sourcepath", "../sample/src/main/java",
                 "org.example",
+                "org.example.packagea",
+                "org.example.packageb",
         };
 
         DocumentationTool docTool = ToolProvider.getSystemDocumentationTool();

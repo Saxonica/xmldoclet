@@ -120,6 +120,12 @@ incomplete or incorrect, please [open an issue](https://github.com/Saxonica/xmld
 
 ## Change log
 
+* **0.8.0** Fixed method names
+
+  Output the “simple” method name in the name attribute on method elements.
+  The full signature is also provided and the parameters and their types are available
+  from children.
+
 * **0.7.0** Improved presentation of interfaces
 
   Reworked the way interfaces are presented so that the methods inherited

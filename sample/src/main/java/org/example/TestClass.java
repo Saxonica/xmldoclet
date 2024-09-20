@@ -4,6 +4,7 @@ import jdk.javadoc.doclet.DocletEnvironment;
 import jdk.javadoc.doclet.Reporter;
 import net.sf.saxon.lib.Feature;
 import net.sf.saxon.serialize.charcode.CharacterSet;
+import java.util.Locale;
 
 import java.lang.reflect.Parameter;
 import java.util.*;
@@ -78,6 +79,9 @@ public class TestClass implements CharacterSet {
     }
 
     public void foo(Class<? extends Object> spoon) {
+    }
+
+    public void bar(Locale myLocal) {
 
     }
 
