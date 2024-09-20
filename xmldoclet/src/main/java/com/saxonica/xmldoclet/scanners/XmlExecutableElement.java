@@ -25,7 +25,7 @@ public abstract class XmlExecutableElement extends XmlScanner {
 
         // Hack
         if (!"constructor".equals(typeName())) {
-            attr.put("name", element.toString());
+            attr.put("name", element.getSimpleName().toString());
         }
 
         Map<String,DeclaredType> thrownTypes = new HashMap<>();
