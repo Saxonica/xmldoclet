@@ -9,6 +9,10 @@ public abstract class ClassWithNested implements InterfaceA, InterfaceB {
         return true;
     }
 
+    /**
+     * Parameterised subclass to accept items of a particular item type
+     * @param <T> the item type of the items returned
+     */
     public abstract static class Nested<T extends Impl> extends ClassWithNested implements InterfaceAB {
         protected T[] items;
         public Nested(T[] items) {
