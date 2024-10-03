@@ -242,7 +242,8 @@ public abstract class XmlExecutableElement extends XmlScanner {
     }
 
     private boolean sameType(TypeMirror t1, TypeMirror t2) {
-        return t1.equals(t2);
+        // Cheap and cheerful test
+        return t1.toString().equals(t2.toString());
     }
 
 }

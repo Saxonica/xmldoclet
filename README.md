@@ -120,6 +120,10 @@ incomplete or incorrect, please [open an issue](https://github.com/Saxonica/xmld
 
 ## Change log
 
+* **0.11.0** Improve type equality comparison when looking for overrides
+
+  The solution here is a fairly awful hack. Will have to come back to this and try to do better.
+
 * **0.10.0** Fix superclass interfaces; output information about type parameters
 
   Moved the interface information about a superclass into the superclass
