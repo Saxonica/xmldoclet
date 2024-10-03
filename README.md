@@ -120,6 +120,12 @@ incomplete or incorrect, please [open an issue](https://github.com/Saxonica/xmld
 
 ## Change log
 
+* **0.9.0** Fixed package and type names; fixed interface lists
+
+  Package and type names are correct (fixed [#10](https://github.com/Saxonica/xmldoclet/issues/10)),
+  and the interfaces of supertypes are included in the list of implemented interfaces
+  (fixed [#11](https://github.com/Saxonica/xmldoclet/issues/11)).
+
 * **0.8.0** Fixed method names
 
   Output the “simple” method name in the name attribute on method elements.

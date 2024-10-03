@@ -24,10 +24,13 @@ public abstract class XmlTypeElement extends XmlScanner {
     public void scan(DocTree tree) {
         String s = element.getQualifiedName().toString();
 
+        String pkgName = getPackage(element);
+        String typeName = getType(element);
+
         Map<String, String> attr = new HashMap<>();
         attr.put("fullname", element.getQualifiedName().toString());
-        attr.put("package", element.getEnclosingElement().toString());
-        attr.put("type", element.getSimpleName().toString());
+        attr.put("package", pkgName);
+        attr.put("type", typeName);
         attr.put("nesting", element.getNestingKind().toString().toLowerCase());
         attr.putAll(modifierAttributes(element));
 
@@ -42,9 +45,10 @@ public abstract class XmlTypeElement extends XmlScanner {
             showSuperclass(element, (DeclaredType) element.getSuperclass(), impl);
         }
 
-        if (!element.getInterfaces().isEmpty()) {
+        List<TypeMirror> interfaces = getInterfaces(element);
+        if (!interfaces.isEmpty()) {
             builder.startElement("interfaces");
-            for (TypeMirror tm : element.getInterfaces()) {
+            for (TypeMirror tm : interfaces) {
                 // Reset the implemented list each time
                 Implemented classimpl = new Implemented(impl);
                 updateImplemented(element, classimpl);
@@ -77,6 +81,62 @@ public abstract class XmlTypeElement extends XmlScanner {
         builder.xmlscan(element.getEnclosedElements());
 
         builder.endElement(typeName());
+    }
+
+    /**
+     * Find the element's package.
+     * <p>For nested classes, we may have to look up several times.</p>
+     * @return the package name
+     */
+    private String getPackage(Element element) {
+        Element enclosing = element.getEnclosingElement();
+
+        if (enclosing == null) {
+            return "";
+        }
+
+        if (enclosing instanceof PackageElement) {
+            return enclosing.toString();
+        }
+
+        return getPackage(enclosing);
+    }
+
+    /**
+     * Find the name of this type; that's our ancestor names if this is a nested class.
+     * @param element The element
+     * @return The type name
+     */
+    private String getType(Element element) {
+        Element enclosing = element.getEnclosingElement();
+        if (enclosing instanceof TypeElement) {
+            String stype = getType(enclosing);
+            if (!"".equals(stype)) {
+                return stype + "." + element.getSimpleName().toString();
+            }
+            return element.getSimpleName().toString();
+        }
+        return element.getSimpleName().toString();
+    }
+
+    /**
+     * Find the implemented interfaces
+     * <p>This includes the interfaces of any classes we extend.</p>
+     * @param element the starting element
+     * @return list of interfaces
+     */
+    private List<TypeMirror> getInterfaces(TypeElement element) {
+        List<TypeMirror> interfaces = new ArrayList<>(element.getInterfaces());
+
+        TypeMirror superClass = element.getSuperclass();
+        if (superClass instanceof DeclaredType) {
+            Element superElem = ((DeclaredType) superClass).asElement();
+            if (superElem instanceof TypeElement) {
+                interfaces.addAll(getInterfaces((TypeElement) superElem));
+            }
+        }
+
+        return interfaces;
     }
 
     private void showSuperclass(TypeElement element, DeclaredType superclass, Implemented impl) {
