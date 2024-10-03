@@ -120,6 +120,13 @@ incomplete or incorrect, please [open an issue](https://github.com/Saxonica/xmld
 
 ## Change log
 
+* **0.10.0** Fix superclass interfaces; output information about type parameters
+
+  Moved the interface information about a superclass into the superclass
+  (fixed [#13](https://github.com/Saxonica/xmldoclet/issues/13)).
+  Output JavaDoc descriptions associated with parameters in parameterized classes
+  (fixed [#14](https://github.com/Saxonica/xmldoclet/issues/14)).
+
 * **0.9.0** Fixed package and type names; fixed interface lists
 
   Package and type names are correct (fixed [#10](https://github.com/Saxonica/xmldoclet/issues/10)),
