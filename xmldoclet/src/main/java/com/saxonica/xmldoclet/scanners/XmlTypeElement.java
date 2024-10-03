@@ -4,6 +4,7 @@ import com.saxonica.xmldoclet.builder.XmlProcessor;
 import com.saxonica.xmldoclet.utils.TypeUtils;
 import com.sun.source.doctree.DocCommentTree;
 import com.sun.source.doctree.DocTree;
+import com.sun.source.doctree.ParamTree;
 
 import javax.lang.model.element.*;
 import javax.lang.model.type.DeclaredType;
@@ -45,10 +46,9 @@ public abstract class XmlTypeElement extends XmlScanner {
             showSuperclass(element, (DeclaredType) element.getSuperclass(), impl);
         }
 
-        List<TypeMirror> interfaces = getInterfaces(element);
-        if (!interfaces.isEmpty()) {
+        if (!element.getInterfaces().isEmpty()) {
             builder.startElement("interfaces");
-            for (TypeMirror tm : interfaces) {
+            for (TypeMirror tm : element.getInterfaces()) {
                 // Reset the implemented list each time
                 Implemented classimpl = new Implemented(impl);
                 updateImplemented(element, classimpl);
@@ -66,6 +66,16 @@ public abstract class XmlTypeElement extends XmlScanner {
                 for (TypeMirror bound : tp.getBounds()) {
                     TypeUtils.xmlType(builder, "type", bound);
                 }
+
+                if (tree instanceof DocCommentTree) {
+                    DocCommentTree dcTree = (DocCommentTree) tree;
+                    for (DocTree tag : dcTree.getBlockTags()) {
+                        if (tag instanceof ParamTree) {
+                            builder.processList("purpose", ((ParamTree) tag).getDescription());
+                        }
+                    }
+                }
+
                 builder.endElement("typeparam");
             }
             builder.endElement("typeparams");
@@ -197,12 +207,22 @@ public abstract class XmlTypeElement extends XmlScanner {
             TypeElement setype = (TypeElement) selem;
             TypeMirror sstype = setype.getSuperclass();
 
-            //showInterfaces(setype, impl);
+            // Show the interfaces of superclasses
+            List<? extends TypeMirror> ifaces = ((TypeElement) selem).getInterfaces();
+            if (!ifaces.isEmpty()) {
+                builder.startElement("interfaces");
+                for (TypeMirror tm : ifaces) {
+                    // Reset the implemented list each time
+                    Implemented classimpl = new Implemented(impl);
+                    updateImplemented(element, classimpl);
+                    showInterfaces(element, (DeclaredType) tm, impl);
+                }
+                builder.endElement("interfaces");
+            }
 
             if (sstype.getKind() == TypeKind.DECLARED) {
                 showSuperclass(setype, (DeclaredType) sstype, impl);
             }
-
         }
 
         builder.endElement("superclass");
