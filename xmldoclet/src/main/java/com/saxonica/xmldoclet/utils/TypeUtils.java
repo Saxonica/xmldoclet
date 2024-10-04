@@ -2,6 +2,9 @@ package com.saxonica.xmldoclet.utils;
 
 import com.saxonica.xmldoclet.builder.XmlProcessor;
 
+import javax.lang.model.element.Element;
+import javax.lang.model.element.PackageElement;
+import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.*;
 import java.util.HashMap;
 import java.util.Map;
@@ -60,9 +63,9 @@ public class TypeUtils {
     private static void declaredType(XmlProcessor builder, String wrapper, DeclaredType dtype) {
         Map<String, String> attr = new HashMap<>();
 
-        attr.put("name", dtype.asElement().getSimpleName().toString());
+        attr.put("name", getType(dtype.asElement()));
         attr.put("fullname", dtype.asElement().toString());
-        attr.put("package", dtype.asElement().getEnclosingElement().toString());
+        attr.put("package", getPackage(dtype.asElement()));
         builder.startElement(wrapper, attr);
 
         for (TypeMirror tm : dtype.getTypeArguments()) {
@@ -71,6 +74,42 @@ public class TypeUtils {
         }
 
         builder.endElement(wrapper);
+    }
+
+    /**
+     * Find the element's package.
+     * <p>For nested classes, we may have to look up several times.</p>
+     * @return the package name
+     */
+    public static String getPackage(Element element) {
+        Element enclosing = element.getEnclosingElement();
+
+        if (enclosing == null) {
+            return "";
+        }
+
+        if (enclosing instanceof PackageElement) {
+            return enclosing.toString();
+        }
+
+        return getPackage(enclosing);
+    }
+
+    /**
+     * Find the name of this type; that's our ancestor names if this is a nested class.
+     * @param element The element
+     * @return The type name
+     */
+    public static String getType(Element element) {
+        Element enclosing = element.getEnclosingElement();
+        if (enclosing instanceof TypeElement) {
+            String stype = getType(enclosing);
+            if (!"".equals(stype)) {
+                return stype + "." + element.getSimpleName().toString();
+            }
+            return element.getSimpleName().toString();
+        }
+        return element.getSimpleName().toString();
     }
 
     private static void wildcardType(XmlProcessor builder, String wrapper, WildcardType wtype) {
