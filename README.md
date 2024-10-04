@@ -120,6 +120,13 @@ incomplete or incorrect, please [open an issue](https://github.com/Saxonica/xmld
 
 ## Change log
 
+* **0.12.0** Fix type equality comparison, fix parameterized type purposes
+
+    Fixed the issue where the purposes for all params were output for each
+    type parameter (fixed [#18](https://github.com/Saxonica/xmldoclet/issues/18)).
+    Replaced the awful type equality hack with a proper comparison.
+    (fixed [#16](https://github.com/Saxonica/xmldoclet/issues/16)).
+
 * **0.11.0** Improve type equality comparison when looking for overrides
 
   The solution here is a fairly awful hack. Will have to come back to this and try to do better.

@@ -60,6 +60,7 @@ public abstract class XmlTypeElement extends XmlScanner {
         if (!element.getTypeParameters().isEmpty()) {
             builder.startElement("typeparams");
             for (TypeParameterElement tp : element.getTypeParameters()) {
+                String tpname = tp.getSimpleName().toString();
                 attr.clear();
                 attr.put("name", tp.toString());
                 builder.startElement("typeparam", attr);
@@ -71,7 +72,10 @@ public abstract class XmlTypeElement extends XmlScanner {
                     DocCommentTree dcTree = (DocCommentTree) tree;
                     for (DocTree tag : dcTree.getBlockTags()) {
                         if (tag instanceof ParamTree) {
-                            builder.processList("purpose", ((ParamTree) tag).getDescription());
+                            String tname = ((ParamTree) tag).getName().toString();
+                            if (tpname.equals(tname)) {
+                                builder.processList("purpose", ((ParamTree) tag).getDescription());
+                            }
                         }
                     }
                 }
