@@ -15,7 +15,7 @@ import java.util.*;
 
 public class TestClass implements CharacterSet {
     public static final TestClass CONSTANTVALUE = new TestClass();
-    protected ParameterizedClass<String> stringParameterizedClass = new ParameterizedClass<>();
+    protected ParameterizedClass<String,Boolean> stringParameterizedClass = new ParameterizedClass<>();
 
     /** The tick! With {@value}*/
     protected final int spoon = 17;

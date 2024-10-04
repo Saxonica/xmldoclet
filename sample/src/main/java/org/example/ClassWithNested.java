@@ -1,5 +1,7 @@
 package org.example;
 
+import java.util.List;
+
 public abstract class ClassWithNested implements InterfaceA, InterfaceB {
     /**
      * Something goes here
@@ -24,6 +26,9 @@ public abstract class ClassWithNested implements InterfaceA, InterfaceB {
             public DoublyNested() {}
             public void a() {}
             public void b() {}
+            public int find(String target, List<String> space) {
+                return 7;
+            }
         }
     }
 }
