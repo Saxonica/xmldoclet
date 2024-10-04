@@ -91,7 +91,7 @@ class =
         modifiers,
         attribute package { text }?,
         attribute nesting { text },
-        attribute type { text },
+        attribute name { text },
         attribute fullname { text },
         (superclass? & since* & see* & interfaces? & typeparams? & author* & version* & error* & unknown*),
         purpose?,
@@ -110,12 +110,13 @@ interface =
         modifiers,
         attribute package { text }?,
         attribute nesting { text }?,
-        attribute type { text },
+        attribute name { text },
         attribute fullname { text }?,
         (since* & see* & interfaces? & typeparams? & author* & version* & error* & unknown*),
         purpose?,
         description?,
-        (field|method|interface|enum)*
+        param*,
+        (inherited|field|method|interface|enum)*
     }
 
 enum =
@@ -123,7 +124,7 @@ enum =
         modifiers,
         attribute package { text }?,
         attribute nesting { text }?,
-        attribute type { text },
+        attribute name { text },
         attribute fullname { text }?,
         (superclass? & since* & see* & interfaces? & author* & version* & error* & unknown*),
         purpose?,
@@ -145,6 +146,7 @@ superclass =
         typeDecl,
         inherited?,
         iinterface*,
+        interfaces*,
         superclass?
     }
 
@@ -177,6 +179,7 @@ iinterface =
 interfaces =
     element interfaces {
         interfaceref+
+      | interface+
     }
 
 typeparams =
@@ -186,9 +189,8 @@ typeparams =
 
 typeparam =
     element typeparam {
-        attribute fullname { text }?,
         attribute name { text },
-        empty
+        type, purpose?
     }
 
 field =
@@ -250,6 +252,7 @@ parameter =
     element parameter {
         modifiers,
         attribute name { text },
+        attribute class { "type" }?,
         purpose?,
         description?,
         typeDecl

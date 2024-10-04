@@ -31,7 +31,7 @@ public abstract class XmlTypeElement extends XmlScanner {
         Map<String, String> attr = new HashMap<>();
         attr.put("fullname", element.getQualifiedName().toString());
         attr.put("package", pkgName);
-        attr.put("type", typeName);
+        attr.put("name", typeName);
         attr.put("nesting", element.getNestingKind().toString().toLowerCase());
         attr.putAll(modifierAttributes(element));
 
