@@ -25,13 +25,10 @@ public abstract class XmlTypeElement extends XmlScanner {
     public void scan(DocTree tree) {
         String s = element.getQualifiedName().toString();
 
-        String pkgName = getPackage(element);
-        String typeName = getType(element);
-
         Map<String, String> attr = new HashMap<>();
         attr.put("fullname", element.getQualifiedName().toString());
-        attr.put("package", pkgName);
-        attr.put("name", typeName);
+        attr.put("package", TypeUtils.getPackage(element));
+        attr.put("name", TypeUtils.getType(element));
         attr.put("nesting", element.getNestingKind().toString().toLowerCase());
         attr.putAll(modifierAttributes(element));
 
@@ -95,42 +92,6 @@ public abstract class XmlTypeElement extends XmlScanner {
         builder.xmlscan(element.getEnclosedElements());
 
         builder.endElement(typeName());
-    }
-
-    /**
-     * Find the element's package.
-     * <p>For nested classes, we may have to look up several times.</p>
-     * @return the package name
-     */
-    private String getPackage(Element element) {
-        Element enclosing = element.getEnclosingElement();
-
-        if (enclosing == null) {
-            return "";
-        }
-
-        if (enclosing instanceof PackageElement) {
-            return enclosing.toString();
-        }
-
-        return getPackage(enclosing);
-    }
-
-    /**
-     * Find the name of this type; that's our ancestor names if this is a nested class.
-     * @param element The element
-     * @return The type name
-     */
-    private String getType(Element element) {
-        Element enclosing = element.getEnclosingElement();
-        if (enclosing instanceof TypeElement) {
-            String stype = getType(enclosing);
-            if (!"".equals(stype)) {
-                return stype + "." + element.getSimpleName().toString();
-            }
-            return element.getSimpleName().toString();
-        }
-        return element.getSimpleName().toString();
     }
 
     /**
@@ -234,9 +195,9 @@ public abstract class XmlTypeElement extends XmlScanner {
 
     private void showInterfaces(TypeElement element, DeclaredType xinter, Implemented impl) {
         Map<String, String> attr = new HashMap<>();
-        attr.put("name", xinter.asElement().getSimpleName().toString());
+        attr.put("name", TypeUtils.getType(xinter.asElement()));
         attr.put("fullname", xinter.asElement().toString());
-        attr.put("package", xinter.asElement().getEnclosingElement().toString());
+        attr.put("package", TypeUtils.getPackage(xinter.asElement()));
         builder.startElement("interface", attr);
 
         for (TypeMirror tm : xinter.getTypeArguments()) {

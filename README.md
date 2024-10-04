@@ -120,6 +120,11 @@ incomplete or incorrect, please [open an issue](https://github.com/Saxonica/xmld
 
 ## Change log
 
+* **0.14.0** Fixed package name
+
+    The package name was sometimes (e.g., in the superclass type)
+    incorrect (missed in the fix to [#10](https://github.com/Saxonica/xmldoclet/issues/10)).
+
 * **0.13.0** Handle type parameters on methods, renamed a few attributes
 
     Extended support for type parameters to methods. On several elements, renamed
