@@ -120,6 +120,11 @@ incomplete or incorrect, please [open an issue](https://github.com/Saxonica/xmld
 
 ## Change log
 
+* **0.15.0** Show nested classes and interfaces
+
+    As a convenience, the list of `classref` and `interfaceref` elements in a package
+    now includes nested classes and interfaces.
+
 * **0.14.0** Fixed package name
 
     The package name was sometimes (e.g., in the superclass type)
