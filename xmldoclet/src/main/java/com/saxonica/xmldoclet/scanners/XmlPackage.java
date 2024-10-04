@@ -31,6 +31,11 @@ public class XmlPackage extends XmlScanner {
             builder.processList("description", dcTree.getBody());
         }
 
+        recursiveRefs(element);
+        builder.endElement("package");
+    }
+
+    public void recursiveRefs(Element element) {
         for (Element child : element.getEnclosedElements()) {
             switch (child.getKind()) {
                 case CLASS:
@@ -45,12 +50,15 @@ public class XmlPackage extends XmlScanner {
                 case ANNOTATION_TYPE:
                     TypeUtils.xmlType(builder, "annotationtyperef", child.asType());
                     break;
+                case FIELD:
+                case METHOD:
+                case CONSTRUCTOR:
+                    break;
                 default:
                     System.err.println("Unexpected element in package: " + child);
                     break;
             }
+            recursiveRefs(child);
         }
-
-        builder.endElement("package");
     }
 }
