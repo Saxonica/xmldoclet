@@ -79,6 +79,7 @@ public class TypeUtils {
     /**
      * Find the element's package.
      * <p>For nested classes, we may have to look up several times.</p>
+     * @param element The starting element
      * @return the package name
      */
     public static String getPackage(Element element) {
@@ -97,7 +98,7 @@ public class TypeUtils {
 
     /**
      * Find the name of this type; that's our ancestor names if this is a nested class.
-     * @param element The element
+     * @param element The starting Welement
      * @return The type name
      */
     public static String getType(Element element) {
