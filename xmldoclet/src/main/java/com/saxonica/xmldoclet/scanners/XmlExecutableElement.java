@@ -1,21 +1,29 @@
 package com.saxonica.xmldoclet.scanners;
 
-import com.saxonica.xmldoclet.utils.TypeUtils;
 import com.saxonica.xmldoclet.builder.XmlProcessor;
-import com.sun.source.doctree.*;
+import com.saxonica.xmldoclet.utils.TypeUtils;
+import com.sun.source.doctree.DocCommentTree;
+import com.sun.source.doctree.DocTree;
+import com.sun.source.doctree.ReturnTree;
+import com.sun.source.doctree.ThrowsTree;
+import jdk.javadoc.doclet.DocletEnvironment;
 
 import javax.lang.model.element.*;
 import javax.lang.model.type.DeclaredType;
-import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
-import java.util.*;
+import javax.lang.model.util.Types;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 public abstract class XmlExecutableElement extends XmlScanner {
     private final ExecutableElement element;
+    private final DocletEnvironment environment;
 
     public XmlExecutableElement(XmlProcessor xmlproc, ExecutableElement element) {
         super(xmlproc);
         this.element = element;
+        this.environment = xmlproc.environment;
     }
 
     public abstract String typeName();
@@ -242,8 +250,7 @@ public abstract class XmlExecutableElement extends XmlScanner {
     }
 
     private boolean sameType(TypeMirror t1, TypeMirror t2) {
-        // Cheap and cheerful test
-        return t1.toString().equals(t2.toString());
+        return  environment.getTypeUtils().isSameType(t1, t2);
     }
 
 }
