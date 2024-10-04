@@ -120,6 +120,12 @@ incomplete or incorrect, please [open an issue](https://github.com/Saxonica/xmld
 
 ## Change log
 
+* **0.13.0** Handle type parameters on methods, renamed a few attributes
+
+    Extended support for type parameters to methods. On several elements, renamed
+    the `type` attribute to `name` for consistency with `fullname`. Updated the
+    schema to be correct wrt the current output.
+
 * **0.12.0** Fix type equality comparison, fix parameterized type purposes
 
     Fixed the issue where the purposes for all params were output for each
