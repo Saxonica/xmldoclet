@@ -13,6 +13,7 @@ import net.sf.saxon.s9api.*;
 
 import javax.lang.model.element.*;
 import javax.lang.model.type.TypeMirror;
+import javax.lang.model.type.TypeVariable;
 import javax.lang.model.util.ElementScanner9;
 import java.io.File;
 import java.io.IOException;
@@ -226,6 +227,9 @@ public class XmlProcessor extends ElementScanner9<Void, XmlProcessor> {
                 break;
             case PARAMETER:
                 scanner = new XmlParameter(this, (VariableElement) element);
+                break;
+            case TYPE_PARAMETER:
+                scanner = new XmlTypeParameter(this, (TypeParameterElement) element);
                 break;
             case FIELD:
                 scanner = new XmlField(this, (VariableElement) element);
