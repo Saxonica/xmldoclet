@@ -44,12 +44,11 @@ public class XmlPackage extends XmlScanner {
                 case INTERFACE:
                     TypeUtils.xmlType(builder, "interfaceref", child.asType());
                     break;
-                case ENUM:
-                    TypeUtils.xmlType(builder, "enumref", child.asType());
-                    break;
                 case ANNOTATION_TYPE:
                     TypeUtils.xmlType(builder, "annotationtyperef", child.asType());
                     break;
+                case ENUM:
+                case ENUM_CONSTANT:
                 case FIELD:
                 case METHOD:
                 case CONSTRUCTOR:

@@ -51,7 +51,7 @@ package =
         attribute name { text },
         purpose?,
         description?,
-        (classref|interfaceref|enumref|annotationtyperef)*
+        (classref|interfaceref|annotationtyperef)*
     }
 
 classref =
@@ -68,14 +68,6 @@ interfaceref =
         attribute fullname { text },
         attribute name { text },
         param*
-    }
-
-enumref =
-    element enumref {
-        attribute package { text }?,
-        attribute name { text },
-        attribute fullname { text },
-        empty
     }
 
 annotationtyperef =
