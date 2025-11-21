@@ -47,6 +47,8 @@ public class XmlPackage extends XmlScanner {
                 case ANNOTATION_TYPE:
                     TypeUtils.xmlType(builder, "annotationtyperef", child.asType());
                     break;
+                case RECORD:
+                case RECORD_COMPONENT:
                 case ENUM:
                 case ENUM_CONSTANT:
                 case FIELD:
@@ -54,7 +56,7 @@ public class XmlPackage extends XmlScanner {
                 case CONSTRUCTOR:
                     break;
                 default:
-                    System.err.println("Unexpected element in package: " + child);
+                    System.err.println("Unexpected element in package: " + child + " (" + child.getKind() + ")");
                     break;
             }
             recursiveRefs(child);

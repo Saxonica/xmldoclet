@@ -19,7 +19,7 @@ doclet =
         admin,
         module*,
         package*,
-        (enum|class|interface|annotationtype)*
+        (enum|class|interface|annotationtype|record)*
     }
 
 admin =
@@ -88,7 +88,7 @@ class =
         (superclass? & since* & see* & interfaces? & typeparams? & author* & version* & error* & unknown*),
         purpose?,
         description?,
-        (field|constructor|method|class|interface|enum)*
+        (field|constructor|method|class|interface|enum|record)*
     }
 
 annotationtype =
@@ -109,6 +109,23 @@ interface =
         description?,
         param*,
         (inherited|field|method|interface|enum)*
+    }
+
+record =
+    element record {
+        modifiers,
+        attribute package { text }?,
+        attribute name { text },
+        attribute fullname { text }?,
+        attribute nesting { text }?,
+        superclass, recordcomponent*, field*, constructor, method*
+    }
+
+recordcomponent =
+    element recordcomponent {
+        modifiers,
+        attribute name { text },
+        type
     }
 
 enum =

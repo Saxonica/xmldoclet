@@ -1,5 +1,6 @@
 package com.saxonica.xmldoclet.builder;
 
+import com.github.javaparser.ParserConfiguration;
 import com.github.javaparser.StaticJavaParser;
 import com.github.javaparser.ast.CompilationUnit;
 import com.github.javaparser.ast.ImportDeclaration;
@@ -39,6 +40,8 @@ public class XmlProcessor extends ElementScanner9<Void, XmlProcessor> {
         processor = new Processor(false);
         this.environment = environment;
         this.destinationDir = destinationDir;
+
+        StaticJavaParser.getParserConfiguration().setLanguageLevel(ParserConfiguration.LanguageLevel.JAVA_17);
 
         if (outputFilename == null) {
             this.outputFilename = "doclet.xml";
@@ -148,6 +151,7 @@ public class XmlProcessor extends ElementScanner9<Void, XmlProcessor> {
                             }
                         } catch (Exception ex) {
                             System.err.println("Failed to parse source: " + source);
+                            System.err.println(ex.getMessage());
                         }
                     }
                 }
@@ -239,6 +243,12 @@ public class XmlProcessor extends ElementScanner9<Void, XmlProcessor> {
                 break;
             case MODULE:
                 scanner = new XmlModule(this, (ModuleElement) element);
+                break;
+            case RECORD:
+                scanner = new XmlRecord(this, (TypeElement) element);
+                break;
+            case RECORD_COMPONENT:
+                scanner = new XmlRecordComponent(this, (VariableElement) element);
                 break;
             default:
                 System.err.printf("Unknown element: %s%n", element.getKind());

@@ -22,6 +22,18 @@ public class TestClass implements CharacterSet {
 
     private static final TestClass theInstance = new TestClass();
 
+    public enum OnFailure {
+        REPORT_ALWAYS, REPORT_UNLESS_FORWARDS_COMPATIBLE, REPORT_IF_INSTANTIATED,
+        REPORT_STATICALLY_UNLESS_FALLBACK_AVAILABLE, REPORT_DYNAMICALLY_UNLESS_FALLBACK_AVAILABLE,
+        IGNORED_INSTRUCTION
+    }
+
+    private static final String[] booleanOptions = new String[2];
+
+            static {
+                booleanOptions[0] = "base-uri";
+                booleanOptions[1] = "comments";
+            }
     /**
      * Constant indicating 1.0
      */
