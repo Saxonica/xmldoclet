@@ -164,20 +164,8 @@ publishing {
   }
 
   repositories {
-    if (project.findProperty("mavenLocalPublish") != null) {
-      println("Publish to ${project.findProperty("mavenLocalPublish")}")
-      maven {
-        url = project.findProperty("mavenLocalPublish")
-      }
-    } else {
-      maven {
-        name = "GitHubPackages"
-        url = "https://maven.pkg.github.com/saxonica/xmldoclet"
-        credentials {
-          username = project.findProperty("pubauthor") ?: "NOUSER"
-          password = project.findProperty("pubtoken") ?: "NOPASS"
-        }
-      }
+    maven {
+      url = uri("build/maven")
     }
   }
 }
